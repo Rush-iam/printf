@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2020/12/30 19:20:18 by ngragas          ###   ########.fr       */
+/*   Updated: 2020/12/31 00:01:07 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,10 @@
 int					ft_printf(const char *format, ...);
 
 /*
-** length: 'hh' = -2; 'h' = -1; 'l' = 1; 'll' = 2
 **	flags:	'-'	=1		'+'	=2		' '	=4		'0'	=8		'#'	=16		'.' = 32
 **				=000001		=000010		=000100		=001000		=010000	 =100000
+** length: 'hh' =1		'h' =3		'l' =7		'll'=15
+* 				=0001		=0011		=0111		=1111
 */
 
 # define FLAG_MINUS		1
@@ -32,12 +33,17 @@ int					ft_printf(const char *format, ...);
 # define FLAG_HASH		16
 # define FLAG_PRECISION	32
 
+# define LEN_HH	1
+# define LEN_H	3
+# define LEN_L	7
+# define LEN_LL	15
+
 typedef struct		s_specs
 {
 	unsigned char	flags;
 	int				width;
 	int				precision;
-	char			length;
+	char			len;
 	char			type;
 	const char		*format_end;
 }					t_specs;

@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2020/12/30 22:52:57 by ngragas          ###   ########.fr       */
+/*   Updated: 2020/12/31 00:14:20 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,77 +14,80 @@
 
 #include <stdio.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-int	ft_atoi_shift(const char **src)
+int	atoi_shift(const char **str)
 {
-	const char	*str = *src;
-	int			num;
+	int	num;
 
 	num = 0;
-	while ('0' <= *str && *str <= '9')
-		num = num * 10 + (*str++ - '0');
-	*src = str;
+	while ('0' <= **str && **str <= '9')
+	{
+		num = num * 10 + (**str - '0');
+		(*str)++;
+	}
 	return (num);
 }
 
-static t_specs	get_specs_2(const char *format, t_specs specs)
+const char	*get_specs_2(const char *format, t_specs *specs)
 {
-	if (*format == 'h' && --specs.length && *++format == 'h')
-		specs.length-- && format++;
-	else if (*format == 'l' && ++specs.length && *++format == 'l')
-		specs.length++ && format++;
-	specs.type = *format;
-	specs.format_end = format;
-	if (ft_strchr("diuxX", specs.type) && (specs.flags & FLAG_PRECISION))
-		specs.flags &= ~FLAG_ZERO;
-	if (specs.type && !(specs.flags & FLAG_PRECISION))
+	specs->type = *format;
+	if (ft_strchr("diuxX", specs->type) && (specs->flags & FLAG_PRECISION))
+		specs->flags &= ~FLAG_ZERO;
+	if (specs->precision < 0 && (specs->flags & FLAG_PRECISION))
+		specs->flags &= ~FLAG_PRECISION;
+	if (specs->type && !(specs->flags & FLAG_PRECISION))
 	{
-		if (ft_strchr("feg", specs.type))
-			specs.precision = 6;
-		else if (ft_strchr("feg", specs.type))
-			specs.precision = 1;
+		if (ft_strchr("feg", specs->type))
+			specs->precision = 6;
+		else if (ft_strchr("diuxX", specs->type))
+			specs->precision = 1;
 	}
-	if (specs.width < 0)
+	if (specs->width < 0)
 	{
-		specs.flags |= FLAG_MINUS;
-		specs.width *= -1;
+		specs->flags |= FLAG_MINUS;
+		specs->width *= -1;
 	}
-	if (specs.flags & FLAG_MINUS)
-		specs.flags &= ~FLAG_ZERO;
-	if (specs.flags & FLAG_PLUS)
-		specs.flags &= ~FLAG_SPACE;
-	return (specs);
+	if (specs->flags & FLAG_MINUS)
+		specs->flags &= ~FLAG_ZERO;
+	if (specs->flags & FLAG_PLUS)
+		specs->flags &= ~FLAG_SPACE;
+	return (format);
 }
 
-static t_specs	get_specs_1(va_list ap, const char *format)
+const char	*get_specs_1(va_list ap, const char *frmt, t_specs *s)
 {
-	const char	*flag_list = "-+ 0#";
+	const char	*fields_list = "-+ 0#.lh*123456789";
 	const char	*flag;
-	t_specs		specs;
 
-	specs = (t_specs){0, 0, 1, 0, '\0', NULL};
-	while ((flag = ft_strchr(flag_list, *++format)))
-		specs.flags |= (1 << (flag - flag_list));
-	specs.width = (*format == '*' ? va_arg(ap, int) : ft_atoi_shift(&format));
-	if (*format == '*')
-		format++;
-	if (*format == '.')
+	while (*frmt && (flag = ft_memchr(fields_list, *frmt, 18)))
 	{
-		specs.precision = *++format == '*' ? \
-									va_arg(ap, int) : ft_atoi_shift(&format);
-		if (specs.precision >= 0)
-			specs.flags |= FLAG_PRECISION;
-		if (*format == '*')
-			format++;
+		if (flag - fields_list < 5)
+		{
+			(s->flags |= (1 << (flag - fields_list))) && frmt++;
+			continue;
+		}
+		if (*frmt == '*' || ft_isdigit(*frmt))
+			s->width = (*frmt == '*' ? va_arg(ap, int) : atoi_shift(&frmt));
+		*frmt == '*' ? frmt++ : 0;
+		if (*frmt == '.')
+		{
+			s->precision = *++frmt == '*' ? va_arg(ap, int) : atoi_shift(&frmt);
+			s->precision >= 0 ? s->flags |= FLAG_PRECISION : 0;
+			*frmt == '*' ? frmt++ : 0;
+		}
+		if (*frmt == 'h')
+			*++frmt == 'h' ? (s->len |= LEN_HH) && frmt++ : (s->len |= LEN_H);
+		else if (*frmt == 'l')
+			*++frmt == 'l' ? (s->len |= LEN_LL) && frmt++ : (s->len |= LEN_L);
 	}
-	return (get_specs_2(format, specs));
+	return (get_specs_2(frmt, s));
 }
 
 static int		reformat(char *res, va_list ap, const char **format, int count)
 {
 	t_specs	specs;
 
-	specs = get_specs_1(ap, *format);
-	*format = specs.format_end;
+	specs = (t_specs){0, 0, 0, 0, '\0', NULL};
+	*format = get_specs_1(ap, *format, &specs);
 	if (**format)
 		(*format)++;
 	*res = '@';
@@ -93,7 +96,7 @@ static int		reformat(char *res, va_list ap, const char **format, int count)
 	printf("\nspecs.type = %c", specs.type);
 	printf("\nspecs.width = %d", specs.width);
 	printf("\nspecs.precision = %d", specs.precision);
-	printf("\nspecs.length = %hhd", specs.length);
+	printf("\nspecs.length = %hhd", specs.len);
 	printf("\nspecs.flags = \"");
 	if (specs.flags & FLAG_MINUS) printf("-");
 	if (specs.flags & FLAG_PLUS) printf("+");
@@ -127,10 +130,13 @@ int				ft_printf(const char *format, ...)
 	char_count = 0;
 	while (*format)
 	{
-		if (*format != '%')
-			res[char_count++] = *format++;
-		else if (*format)
+		if (*format == '%')
+		{
+			format++;
 			char_count = reformat(res + char_count, ap, &format, char_count);
+		}
+		else
+			res[char_count++] = *format++;
 	}
 	write(1, res, char_count);
 	va_end(ap);
