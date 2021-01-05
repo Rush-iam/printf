@@ -6,145 +6,13 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/04 22:58:34 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/05 22:18:21 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-#include <stdio.h> // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-size_t			ft_wstrlen(const wchar_t *s, ssize_t n)
-{
-	int		char_size;
-	size_t	count;
-
-	count = 0;
-	while (*s && (n == -1 || count < n))
-	{
-		if (*s >= 65536)
-			char_size = 4;
-		else if (*s >= 2048)
-			char_size = 3;
-		else if (*s >= 128)
-			char_size = 2;
-		else
-			char_size = 1;
-		if (n != -1 && count + char_size > n)
-			break ;
-		count += char_size;
-		s++;
-	}
-	return (count);
-}
-
-int				ft_wchrtoutf8(char *dst, const wchar_t src)
-{
-	int	bytes;
-
-	bytes = 1;
-	if (src < 128)
-		*dst = (char)src;
-	else if (src < 2048)
-	{
-		dst[0] = (char)(0b11000000 | src >> 6);
-		(dst[1] = (char)(0b10000000 | src & 0b111111)) && (bytes++);
-	}
-	else if (src < 65536)
-	{
-		dst[0] = (char)(0b11100000 | src >> 12);
-		dst[1] = (char)(0b10000000 | src >> 6 & 0b111111);
-		(dst[2] = (char)(0b10000000 | src & 0b111111)) && (bytes += 2);
-	}
-	else if (src < 1114112)
-	{
-		dst[0] = (char)(0b11110000 | src >> 18);
-		dst[1] = (char)(0b10000000 | src >> 12 & 0b111111);
-		dst[2] = (char)(0b10000000 | src >> 6 & 0b111111);
-		(dst[3] = (char)(0b10000000 | src & 0b111111)) && (bytes += 3);
-	}
-	return (bytes);
-}
-
-size_t			ft_wstrtoutf8(char *dst, const wchar_t *src, size_t n)
-{
-	int		char_size;
-	size_t	count;
-
-	count = 0;
-	while (*src && count < n)
-	{
-		if (*src >= 65536)
-			char_size = 4;
-		else if (*src >= 2048)
-			char_size = 3;
-		else if (*src >= 128)
-			char_size = 2;
-		else
-			char_size = 1;
-		if (count + char_size > n)
-			break ;
-		count += char_size;
-		dst += ft_wchrtoutf8(dst, *src);
-		src++;
-	}
-	*dst = '\0';
-	return (count);
-}
-
-size_t			reformat_string_utf8(char *res, wchar_t *string, t_specs specs)
-{
-	const size_t	src_len = ft_wstrlen(string, -1);
-	size_t			dst_len;
-	size_t			real_len;
-
-	if ((specs.flags & FLAG_PRECISION) && specs.precision < src_len)
-		dst_len = ft_wstrlen(string, specs.precision);
-	else
-		dst_len = src_len;
-	real_len = (specs.width > dst_len ? specs.width : dst_len);
-	if (specs.flags & FLAG_MINUS)
-	{
-		ft_wstrtoutf8(res, string, dst_len);
-		res += dst_len;
-		ft_memset(res, ' ', real_len - dst_len);
-	}
-	else
-	{
-		ft_memset(res, ' ', real_len - dst_len);
-		res += real_len - dst_len;
-		ft_wstrtoutf8(res, string, dst_len);
-	}
-	return (real_len);
-}
-
-size_t			reformat_string(char *res, char *string, t_specs specs)
-{
-	const size_t	src_len = ft_strlen(string);
-	size_t			dst_len;
-	size_t			real_len;
-
-	if ((specs.flags & FLAG_PRECISION) && specs.precision < src_len)
-		dst_len = specs.precision;
-	else
-		dst_len = src_len;
-	real_len = (specs.width > dst_len ? specs.width : dst_len);
-	if (specs.flags & FLAG_MINUS)
-	{
-		ft_memcpy(res, string, dst_len);
-		res += dst_len;
-		ft_memset(res, ' ', real_len - dst_len);
-	}
-	else
-	{
-		ft_memset(res, ' ', real_len - dst_len);
-		res += real_len - dst_len;
-		ft_memcpy(res, string, dst_len);
-	}
-	return (real_len);
-}
-
-static int		atoi_shift(const char **str)
+static int	atoi_shift(const char **str)
 {
 	int	num;
 
@@ -158,7 +26,7 @@ static int		atoi_shift(const char **str)
 	return (num);
 }
 
-const char		*get_specs_2(const char *fstr, t_specs *specs)
+const char	*get_specs_2(const char *fstr, t_specs *specs)
 {
 	specs->type = *fstr;
 	if (ft_strchr("diuxX", specs->type) && (specs->flags & FLAG_PRECISION))
@@ -184,7 +52,7 @@ const char		*get_specs_2(const char *fstr, t_specs *specs)
 	return (fstr);
 }
 
-const char		*get_specs_1(va_list ap, const char *fstr, t_specs *s)
+const char	*get_specs_1(va_list ap, const char *fstr, t_specs *s)
 {
 	const char	fields_list[] = "-+ 0#.lh*123456789";
 	const char	*flag;
@@ -193,7 +61,7 @@ const char		*get_specs_1(va_list ap, const char *fstr, t_specs *s)
 	{
 		if (flag - fields_list < 5)
 		{
-			s->flags |= (1 << (flag - fields_list));
+			s->flags = (char)(s->flags | 1 << (flag - fields_list));
 			fstr++;
 			continue;
 		}
@@ -213,15 +81,84 @@ const char		*get_specs_1(va_list ap, const char *fstr, t_specs *s)
 	return (get_specs_2(fstr, s));
 }
 
-static int		reformat(char *res, va_list ap, const char **fstr, int count)
+int		ft_printf_signed_itoa(char *dst, va_list ap, char length, char flags)
+{
+	long long	src_number;
+	char		sign;
+	int			count;
+
+	if (length == LEN_LL)
+		src_number = va_arg(ap, long long int);
+	else if (length == LEN_L)
+		src_number = va_arg(ap, long int);
+	else
+		src_number = va_arg(ap, int);
+	sign = (src_number >= 0) ? 1 : -1;
+	count = 0;
+	while (src_number)
+	{
+		dst[19 - count++] = (char)('0' + src_number % 10 * sign);
+		src_number /= 10;
+	}
+	dst[0] = '\0';
+	if (sign == -1)
+		dst[0] = '-';
+	else if (flags & FLAG_PLUS)
+		dst[0] = '+';
+	else if (flags & FLAG_SPACE)
+		dst[0] = ' ';
+	return (count);
+}
+
+int		ft_printf_signed(char *res, va_list ap, t_specs specs)
+{
+	char	number[20];
+	int		src_len;
+	int		prec_len;
+	int		width_len;
+
+	src_len = ft_printf_signed_itoa(number, ap, specs.len, specs.flags);
+	if ((specs.flags & FLAG_PRECISION) && specs.precision > src_len)
+		prec_len = specs.precision;
+	else
+		prec_len = src_len;
+	width_len = specs.width > prec_len ? specs.width - prec_len : *number != 0;
+	if (specs.flags & FLAG_MINUS)
+	{
+		number[0] != '\0' ? *res++ = number[0] : 0;
+		ft_memset(res, '0', prec_len - src_len) && (res += prec_len - src_len);
+		ft_memcpy(res, number + (19 - src_len), src_len) && (res += src_len);
+		ft_memset(res, ' ', width_len - (number[0] != '\0'));
+	}
+	else if (specs.flags & FLAG_ZERO)
+	{
+		number[0] != '\0' ? *res++ = number[0] : 0;
+		ft_memset(res, '0', width_len - (number[0] != '\0'));
+		res += width_len - (number[0] != '\0');
+		ft_memcpy(res, number + (19 - src_len), src_len);
+	}
+	else
+	{
+		ft_memset(res, ' ', width_len - (number[0] != '\0'));
+		res += width_len - (number[0] != '\0');
+		number[0] != '\0' ? *res++ = number[0] : 0;
+		ft_memset(res, '0', prec_len - src_len) && (res += prec_len - src_len);
+		ft_memcpy(res, number + (19 - src_len), src_len);
+	}
+	return (width_len + (number[0] != '\0') + prec_len);
+}
+
+static int	reformat(char *res, va_list ap, const char **fstr, int count)
 {
 	t_specs	specs;
+	int		extra_count;
 
 	specs = (t_specs){0, 0, 0, 0, '\0'};
 	*fstr = get_specs_1(ap, *fstr, &specs);
-	if (**fstr)
+	if (specs.type)
 		(*fstr)++;
 
+	#include <stdio.h>
 	printf("\nspecs.type = %c", specs.type);
 	printf("\nspecs.width = %d", specs.width);
 	printf("\nspecs.precision = %d", specs.precision);
@@ -235,26 +172,27 @@ static int		reformat(char *res, va_list ap, const char **fstr, int count)
 	if (specs.flags & FLAG_PRECISION) printf(".");
 	printf("\"\n");
 
+	extra_count = 0;
 	if (specs.type == 's' && specs.len != LEN_L)
-		count += reformat_string(res, va_arg(ap, char *), specs);
+		extra_count = ft_printf_string(res, va_arg(ap, char *), specs);
 	else if (specs.type == 's' && specs.len == LEN_L)
-		count += reformat_string_utf8(res, va_arg(ap, wchar_t *), specs);
-//	else if (specs.type == 'd' || specs.type == 'u' || specs.type == 'i')
-//		count += reformat_integer(res, ap, specs);
+		extra_count = ft_printf_string_utf(res, va_arg(ap, wchar_t *), specs);
+	else if (specs.type == 'd' || specs.type == 'i' || specs.type == 'u')
+		extra_count = ft_printf_signed(res, ap, specs);
 //	else if (specs.type == 'p' || specs.type == 'x' || specs.type == 'X')
 //		count += reformat_hex(res, ap, specs);
 //	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')
 //		count += reformat_float(res, ap, specs);
 //	else if (specs.type == 'n')
 //		put_count(va_arg(ap, int *), count, specs);
-//	else if (specs.type == 'c' || specs.type)
-//		count += reformat_char(res, ap, specs);
-	return (count);
+	else if (specs.type == 'c' || specs.type)
+		extra_count = ft_printf_char(res, ap, specs);
+	return (extra_count == -1 ? -1 : count + extra_count);
 }
 
-int				ft_printf(const char *format, ...)
+int			ft_printf(const char *format, ...)
 {
-	char 	res[65536];
+	char	res[65536];
 	int		char_count;
 	va_list	ap;
 
@@ -266,6 +204,8 @@ int				ft_printf(const char *format, ...)
 		{
 			format++;
 			char_count = reformat(res + char_count, ap, &format, char_count);
+			if (char_count == -1)
+				return (-1);
 		}
 		else
 			res[char_count++] = *format++;

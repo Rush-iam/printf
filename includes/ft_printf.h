@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/04 13:31:31 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/05 21:12:22 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,7 @@
 # include "libft.h"
 # include <unistd.h>
 # include <stdarg.h>
-
-int					ft_printf(const char *format, ...);
+# include <wchar.h>
 
 /*
 **	flags:	'-'	=1		'+'	=2		' '	=4		'0'	=8		'#'	=16		'.' = 32
@@ -38,13 +37,22 @@ int					ft_printf(const char *format, ...);
 # define LEN_L	0b0111
 # define LEN_LL	0b1111
 
-typedef struct		s_specs
+typedef struct	s_specs
 {
-	unsigned char	flags;
-	int				width;
-	int				precision;
-	char			len;
-	char			type;
-}					t_specs;
+	char		flags;
+	int			width;
+	int			precision;
+	char		len;
+	char		type;
+}				t_specs;
+
+int				ft_printf(const char *format, ...);
+
+int				ft_printf_char(char *res, va_list ap, t_specs specs);
+int				ft_printf_string(char *res, const char *string, t_specs specs);
+int				ft_printf_string_utf(
+							char *res, const wchar_t *string, t_specs specs);
+size_t			ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32, size_t n);
+int				ft_wchrto8(char *dst_utf8, wchar_t src_utf32);
 
 #endif
