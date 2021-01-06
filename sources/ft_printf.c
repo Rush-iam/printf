@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/06 20:42:22 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/06 20:55:18 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int					ft_printf(const char *format, ...)
 	return (char_count);
 }
 
-static int			ft_printf_format(char *res, va_list ap, const char **fstr,
+int					ft_printf_format(char *res, va_list ap, const char **fstr,
 										int count)
 {
 	t_specs	specs;
@@ -81,7 +81,7 @@ static int			ft_printf_format(char *res, va_list ap, const char **fstr,
 	return (f_count == -1 ? -1 : count + f_count);
 }
 
-static const char	*ft_printf_parse_specs_1(va_list ap, const char *fstr,
+const char			*ft_printf_parse_specs_1(va_list ap, const char *fstr,
 											t_specs *s)
 {
 	const char	fields_list[] = "-+ 0#.lh*123456789";
@@ -95,12 +95,12 @@ static const char	*ft_printf_parse_specs_1(va_list ap, const char *fstr,
 			continue;
 		}
 		if (*fstr == '*' || ft_isdigit(*fstr))
-			s->width = (*fstr == '*') ?
-						va_arg(ap, int) && fstr++ : ft_printf_parse_atoi(&fstr);
+			s->width = (*fstr++ == '*') ?
+						va_arg(ap, int) : ft_printf_parse_atoi(&fstr);
 		if (*fstr == '.' && fstr++)
 		{
-			s->precision = (*fstr == '*') ?
-						va_arg(ap, int) && fstr++ : ft_printf_parse_atoi(&fstr);
+			s->precision = (*fstr++ == '*') ?
+						va_arg(ap, int) : ft_printf_parse_atoi(&fstr);
 			s->precision >= 0 ? s->flags |= FLAG_PRECISION : 0;
 		}
 		if (*fstr == 'h')
@@ -111,7 +111,7 @@ static const char	*ft_printf_parse_specs_1(va_list ap, const char *fstr,
 	return (ft_printf_parse_specs_2(fstr, s));
 }
 
-static const char	*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
+const char			*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
 {
 	specs->type = *fstr;
 	if (specs->type == '\0')
@@ -140,11 +140,12 @@ static const char	*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
 	return (fstr);
 }
 
-static int			ft_printf_parse_atoi(const char **str)
+int					ft_printf_parse_atoi(const char **str)
 {
 	int	num;
 
 	num = 0;
+	(*str)--;
 	while ('0' <= **str && **str <= '9')
 	{
 		num = num * 10 + (**str - '0');
