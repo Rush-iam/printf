@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/05 18:48:46 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/06 20:21:44 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/06 21:51:55 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,10 +43,13 @@ int		ft_printf_char(char *res, va_list ap, const t_specs *specs)
 
 int		ft_printf_string(char *res, const char *string, const t_specs *specs)
 {
-	const size_t	src_len = ft_strlen(string);
-	size_t			dst_len;
-	size_t			real_len;
+	size_t	src_len;
+	size_t	dst_len;
+	size_t	real_len;
 
+	if (string == NULL)
+		string = "(null)";
+	src_len = ft_strlen(string);
 	if ((specs->flags & FLAG_PRECISION) && (size_t)specs->precision < src_len)
 		dst_len = specs->precision;
 	else
@@ -60,7 +63,7 @@ int		ft_printf_string(char *res, const char *string, const t_specs *specs)
 	}
 	else
 	{
-		ft_memset(res, ' ', real_len - dst_len);
+		ft_memset(res, " 0"[!!(specs->flags & FLAG_ZERO)], real_len - dst_len);
 		res += real_len - dst_len;
 		ft_memcpy(res, string, dst_len);
 	}
@@ -70,9 +73,11 @@ int		ft_printf_string(char *res, const char *string, const t_specs *specs)
 int		ft_printf_string_utf(char *res, const wchar_t *string,
 							const t_specs *specs)
 {
-	size_t	dst_len;
-	size_t	real_len;
+	size_t			dst_len;
+	size_t			real_len;
 
+	if (string == NULL)
+		string = L"(null)";
 	if (specs->flags & FLAG_PRECISION)
 		dst_len = ft_wstrto8(NULL, string, specs->precision);
 	else
@@ -88,7 +93,7 @@ int		ft_printf_string_utf(char *res, const wchar_t *string,
 	}
 	else
 	{
-		ft_memset(res, ' ', real_len - dst_len);
+		ft_memset(res, " 0"[!!(specs->flags & FLAG_ZERO)], real_len - dst_len);
 		res += real_len - dst_len;
 		ft_wstrto8(res, string, dst_len);
 	}
@@ -110,8 +115,9 @@ size_t	ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32, size_t n)
 	count = 0;
 	while (*src_utf32 && count < n)
 	{
-		char_size = 1;
-		if (128 <= *src_utf32 && *src_utf32 < 2048)
+		if (*src_utf32 < 128)
+			char_size = 1;
+		else if (*src_utf32 < 2048)
 			char_size = 2;
 		else if (*src_utf32 < 65536)
 			char_size = 3;
@@ -126,8 +132,7 @@ size_t	ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32, size_t n)
 			dst_utf8 += ft_wchrto8(dst_utf8, *src_utf32);
 		src_utf32++;
 	}
-	if (dst_utf8)
-		*dst_utf8 = '\0';
+	dst_utf8 ? *dst_utf8 = '\0' : 0;
 	return (count);
 }
 
