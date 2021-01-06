@@ -6,27 +6,27 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/05 18:48:46 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/05 20:53:00 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/06 20:21:44 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-int		ft_printf_char(char *res, va_list ap, t_specs specs)
+int		ft_printf_char(char *res, va_list ap, const t_specs *specs)
 {
 	char	character[4];
 	int		dst_len;
 	int		real_len;
 
 	dst_len = 1;
-	if (specs.type == 'c' && specs.len == LEN_L)
+	if (specs->type == 'c' && specs->len == LEN_L)
 		dst_len = ft_wchrto8(character, va_arg(ap, wint_t));
 	else
-		*character = (char)(specs.type == 'c' ? va_arg(ap, int) : specs.type);
+		*character = (specs->type == 'c') ? (char)va_arg(ap, int) : specs->type;
 	if (!dst_len)
 		return (-1);
-	real_len = (specs.width > dst_len ? specs.width : dst_len);
-	if (specs.flags & FLAG_MINUS)
+	real_len = (specs->width > dst_len ? specs->width : dst_len);
+	if (specs->flags & FLAG_MINUS)
 	{
 		ft_memcpy(res, character, dst_len);
 		res += dst_len;
@@ -34,25 +34,25 @@ int		ft_printf_char(char *res, va_list ap, t_specs specs)
 	}
 	else
 	{
-		ft_memset(res, " 0"[(specs.flags & FLAG_ZERO) > 0], real_len - dst_len);
+		ft_memset(res, " 0"[!!(specs->flags & FLAG_ZERO)], real_len - dst_len);
 		res += real_len - dst_len;
 		ft_memcpy(res, character, dst_len);
 	}
 	return (real_len);
 }
 
-int		ft_printf_string(char *res, const char *string, t_specs specs)
+int		ft_printf_string(char *res, const char *string, const t_specs *specs)
 {
 	const size_t	src_len = ft_strlen(string);
 	size_t			dst_len;
 	size_t			real_len;
 
-	if ((specs.flags & FLAG_PRECISION) && (size_t)specs.precision < src_len)
-		dst_len = specs.precision;
+	if ((specs->flags & FLAG_PRECISION) && (size_t)specs->precision < src_len)
+		dst_len = specs->precision;
 	else
 		dst_len = src_len;
-	real_len = ((size_t)specs.width > dst_len ? specs.width : dst_len);
-	if (specs.flags & FLAG_MINUS)
+	real_len = ((size_t)specs->width > dst_len ? specs->width : dst_len);
+	if (specs->flags & FLAG_MINUS)
 	{
 		ft_memcpy(res, string, dst_len);
 		res += dst_len;
@@ -67,19 +67,20 @@ int		ft_printf_string(char *res, const char *string, t_specs specs)
 	return (real_len);
 }
 
-int		ft_printf_string_utf(char *res, const wchar_t *string, t_specs specs)
+int		ft_printf_string_utf(char *res, const wchar_t *string,
+							const t_specs *specs)
 {
 	size_t	dst_len;
 	size_t	real_len;
 
-	if (specs.flags & FLAG_PRECISION)
-		dst_len = ft_wstrto8(NULL, string, specs.precision);
+	if (specs->flags & FLAG_PRECISION)
+		dst_len = ft_wstrto8(NULL, string, specs->precision);
 	else
 		dst_len = ft_wstrto8(NULL, string, -1);
 	if (dst_len == (size_t)-1)
 		return (-1);
-	real_len = ((size_t)specs.width > dst_len ? specs.width : dst_len);
-	if (specs.flags & FLAG_MINUS)
+	real_len = ((size_t)specs->width > dst_len ? specs->width : dst_len);
+	if (specs->flags & FLAG_MINUS)
 	{
 		ft_wstrto8(res, string, dst_len);
 		res += dst_len;
@@ -97,7 +98,7 @@ int		ft_printf_string_utf(char *res, const wchar_t *string, t_specs specs)
 /*
 **	ft_wstrto8
 ** if dst == NULL: return length in bytes without writing
-** if n == -1: SIZE_T_MAX limit of max len
+** if n == -1: SIZE_T_MAX limit (==unlimited)
 ** if UTF-32 >= 1114112 (0x10FFFF): return error (-1)
 */
 

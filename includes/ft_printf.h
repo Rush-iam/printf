@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/05 21:12:22 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/06 20:27:50 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,22 +37,38 @@
 # define LEN_L	0b0111
 # define LEN_LL	0b1111
 
-typedef struct	s_specs
+typedef struct		s_specs
 {
-	char		flags;
-	int			width;
-	int			precision;
-	char		len;
-	char		type;
-}				t_specs;
+	char			flags;
+	int				width;
+	int				precision;
+	char			len;
+	char			type;
+}					t_specs;
 
-int				ft_printf(const char *format, ...);
+int					ft_printf(const char *format, ...);
+static int			ft_printf_format(char *res, va_list ap, const char **fstr,
+									int count);
+static const char	*ft_printf_parse_specs_1(va_list ap, const char *fstr,
+											t_specs *s);
+static const char	*ft_printf_parse_specs_2(const char *fstr, t_specs *specs);
+static int			ft_printf_parse_atoi(const char **str);
 
-int				ft_printf_char(char *res, va_list ap, t_specs specs);
-int				ft_printf_string(char *res, const char *string, t_specs specs);
-int				ft_printf_string_utf(
-							char *res, const wchar_t *string, t_specs specs);
-size_t			ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32, size_t n);
-int				ft_wchrto8(char *dst_utf8, wchar_t src_utf32);
+int					ft_printf_char(char *res, va_list ap, const t_specs *specs);
+int					ft_printf_string(char *res, const char *string,
+								const t_specs *specs);
+int					ft_printf_string_utf(char *res, const wchar_t *string,
+									const t_specs *specs);
+size_t				ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32,
+								size_t n);
+int					ft_wchrto8(char *dst_utf8, wchar_t src_utf32);
+
+int					ft_printf_int(char *res, long long num, int base,
+								const t_specs *s);
+long long			ft_printf_int_get(va_list ap, const t_specs *specs);
+int					ft_printf_itoa_signed(char *dst, long long num,
+										const t_specs *specs);
+int					ft_printf_itoa_unsigned(char *dst, unsigned long long num,
+										int base, const t_specs *specs);
 
 #endif
