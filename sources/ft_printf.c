@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 19:09:06 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 22:39:38 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,35 +14,33 @@
 
 int			ft_printf(const char *format, ...)
 {
-	int		total_count;
-	int		cur_count;
-	t_buf	res;
-	va_list	ap;
-	char	*percent_pos;
+	t_buf		res;
+	va_list		ap;
+	const char	*percent_pos;
+	int			cur_count;
 
-	total_count = 0;
+	res.total_count = 0;
 	res.len = 0;
 	va_start(ap, format);
 	while ((percent_pos = ft_strchr(format, '%')))
 	{
-		total_count += percent_pos - format;
 		ft_printf_bufcpy(&res, format, percent_pos - format);
 		format = percent_pos + 1;
-		cur_count = ft_printf_format(&res, ap, &format, total_count);
+		cur_count = ft_printf_format(&res, ap, &format);
 		if (cur_count == -1)
+		{
+			write(STDOUT_FILENO, res.str, res.len);
 			return (-1);
-		total_count += cur_count;
+		}
 	}
 	va_end(ap);
 	cur_count = ft_strlen(format);
 	ft_printf_bufcpy(&res, format, cur_count);
-	total_count += cur_count;
 	write(STDOUT_FILENO, res.str, res.len);
-	return (total_count);
+	return (res.total_count);
 }
 
-int			ft_printf_format(t_buf *res, va_list ap, const char **format,
-															int total_count)
+int			ft_printf_format(t_buf *res, va_list ap, const char **format)
 {
 	t_specs	specs;
 	int		count;
@@ -78,7 +76,7 @@ int			ft_printf_format(t_buf *res, va_list ap, const char **format,
 //	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')
 //		count += reformat_float(res, ap, specs);
 	else if (specs.type == 'n')
-		ft_printf_put_count(ap, total_count, specs.len);
+		ft_printf_put_count(ap, res->total_count, specs.len);
 	else if (specs.type == 'c' || specs.type)
 		count = ft_printf_char(res, ap, &specs);
 	return (count);
@@ -102,6 +100,7 @@ void		ft_printf_put_count(va_list ap, int count, char length)
 
 void		ft_printf_bufcpy(t_buf *buf, const char *src, size_t n)
 {
+	buf->total_count += n;
 	if (buf->len + n > sizeof(buf->str))
 	{
 		write(STDOUT_FILENO, buf->str, buf->len);
@@ -120,6 +119,7 @@ void		ft_printf_bufset(t_buf *buf, char c, size_t n)
 {
 	int	i;
 
+	buf->total_count += n;
 	if (buf->len + n >= sizeof(buf->str))
 	{
 		write(STDOUT_FILENO, buf->str, buf->len);

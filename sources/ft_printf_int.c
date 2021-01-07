@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/06 20:02:42 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 19:40:40 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 21:02:47 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,7 @@ long long	ft_printf_int_get(va_list ap, const t_specs *specs)
 		else if (specs->len == LEN_H)
 			return ((short int)va_arg(ap, int));
 	}
-	if (specs->len == 0)
-		return (va_arg(ap, unsigned int));
-	else if (specs->len == LEN_LL)
+	if (specs->len == LEN_LL)
 		return (va_arg(ap, unsigned long long int));
 	else if (specs->len == LEN_L)
 		return (va_arg(ap, unsigned long int));
@@ -39,6 +37,8 @@ long long	ft_printf_int_get(va_list ap, const t_specs *specs)
 		return ((unsigned char)va_arg(ap, unsigned int));
 	else if (specs->len == LEN_H)
 		return ((unsigned short int)va_arg(ap, unsigned int));
+	else
+		return (va_arg(ap, unsigned int));
 }
 
 int			ft_printf_int(t_buf *res, long long num, int base, const t_specs *s)
@@ -52,15 +52,15 @@ int			ft_printf_int(t_buf *res, long long num, int base, const t_specs *s)
 		src_l = ft_printf_itoa_signed(num_str, num, s);
 	else
 		src_l = ft_printf_itoa_unsigned(num_str, num, base, s);
-	prec_l = (s->precision > src_l) ? s->precision - src_l : 0;
-	width_l = (s->width > (num_str[0] != 0) + prec_l + src_l) ?
-		s->width - (num_str[0] != 0) - (num_str[1] != 0) - prec_l - src_l : 0;
+	prec_l = 0;
+	if (s->precision > src_l)
+		prec_l = s->precision - src_l;
+	width_l = 0;
+	if (s->width > (num_str[0] != '\0') + (num_str[0] != '\0') + prec_l + src_l)
+		width_l = s->width - !!num_str[0] - !!num_str[1] - prec_l - src_l;
 	if ((s->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
 		ft_printf_bufset(res, ' ', width_l);
-	if (num_str[0] != '\0')
-		ft_printf_bufset(res, num_str[0], 1);
-	if (num_str[1] != '\0')
-		ft_printf_bufset(res, num_str[1], 1);
+	ft_printf_bufcpy(res, num_str, (num_str[0] != '\0') + (num_str[1] != '\0'));
 	if (s->flags & FLAG_ZERO)
 		ft_printf_bufset(res, '0', width_l);
 	ft_printf_bufset(res, '0', prec_l);
@@ -70,10 +70,16 @@ int			ft_printf_int(t_buf *res, long long num, int base, const t_specs *s)
 	return (width_l + (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l);
 }
 
+/*
+**	ft_printf_itoa
+**	signed: num[0] holds sign '-'/'+'/' '
+**  unsigned: num[0]:num[1] hold prefix "0x"/"0X"
+*/
+
 int			ft_printf_itoa_signed(char *dst, long long num,
 									const t_specs *specs)
 {
-	const char	sign = num < 0 ? -1 : 1;
+	const char	sign = (num < 0) ? -1 : 1;
 	int			count;
 
 	count = 0;
@@ -83,7 +89,7 @@ int			ft_printf_itoa_signed(char *dst, long long num,
 		num /= 10;
 		count++;
 	}
-	if (sign >= 0)
+	if (sign == 1)
 	{
 		if (specs->flags & FLAG_PLUS)
 			dst[0] = '+';
