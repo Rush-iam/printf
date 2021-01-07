@@ -6,46 +6,42 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/05 18:48:46 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/06 21:51:55 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 15:55:43 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-int		ft_printf_char(char *res, va_list ap, const t_specs *specs)
+int		ft_printf_char(t_buf *res, va_list ap, const t_specs *specs)
 {
-	char	character[4];
+	char	char_arr[4];
 	int		dst_len;
-	int		real_len;
+	int		width_len;
 
 	dst_len = 1;
 	if (specs->type == 'c' && specs->len == LEN_L)
-		dst_len = ft_wchrto8(character, va_arg(ap, wint_t));
+		dst_len = ft_wchrto8(char_arr, va_arg(ap, wint_t));
 	else
-		*character = (specs->type == 'c') ? (char)va_arg(ap, int) : specs->type;
+		*char_arr = (specs->type == 'c') ? (char)va_arg(ap, int) : specs->type;
 	if (!dst_len)
 		return (-1);
-	real_len = (specs->width > dst_len ? specs->width : dst_len);
+	width_len = (specs->width > dst_len ? specs->width - dst_len : 0);
 	if (specs->flags & FLAG_MINUS)
-	{
-		ft_memcpy(res, character, dst_len);
-		res += dst_len;
-		ft_memset(res, ' ', real_len - dst_len);
-	}
+		ft_printf_bufcpy(res, char_arr, dst_len);
+	if (specs->flags & FLAG_ZERO)
+		ft_printf_bufset(res, '0', width_len);
 	else
-	{
-		ft_memset(res, " 0"[!!(specs->flags & FLAG_ZERO)], real_len - dst_len);
-		res += real_len - dst_len;
-		ft_memcpy(res, character, dst_len);
-	}
-	return (real_len);
+		ft_printf_bufset(res, ' ', width_len);
+	if ((specs->flags & FLAG_MINUS) == 0)
+		ft_printf_bufcpy(res, char_arr, dst_len);
+	return (width_len + dst_len);
 }
 
-int		ft_printf_string(char *res, const char *string, const t_specs *specs)
+int		ft_printf_string(t_buf *res, const char *string, const t_specs *specs)
 {
 	size_t	src_len;
 	size_t	dst_len;
-	size_t	real_len;
+	size_t	width_len;
 
 	if (string == NULL)
 		string = "(null)";
@@ -54,61 +50,54 @@ int		ft_printf_string(char *res, const char *string, const t_specs *specs)
 		dst_len = specs->precision;
 	else
 		dst_len = src_len;
-	real_len = ((size_t)specs->width > dst_len ? specs->width : dst_len);
+	width_len = ((size_t)specs->width > dst_len ? specs->width - dst_len : 0);
 	if (specs->flags & FLAG_MINUS)
-	{
-		ft_memcpy(res, string, dst_len);
-		res += dst_len;
-		ft_memset(res, ' ', real_len - dst_len);
-	}
+		ft_printf_bufcpy(res, string, dst_len);
+	if (specs->flags & FLAG_ZERO)
+		ft_printf_bufset(res, '0', width_len);
 	else
-	{
-		ft_memset(res, " 0"[!!(specs->flags & FLAG_ZERO)], real_len - dst_len);
-		res += real_len - dst_len;
-		ft_memcpy(res, string, dst_len);
-	}
-	return (real_len);
+		ft_printf_bufset(res, ' ', width_len);
+	if ((specs->flags & FLAG_MINUS) == 0)
+		ft_printf_bufcpy(res, string, dst_len);
+	return (width_len + dst_len);
 }
 
-int		ft_printf_string_utf(char *res, const wchar_t *string,
+int		ft_printf_string_utf(t_buf *res, const wchar_t *string,
 							const t_specs *specs)
 {
-	size_t			dst_len;
-	size_t			real_len;
+	size_t	dst_len;
+	size_t	width_len;
 
 	if (string == NULL)
 		string = L"(null)";
 	if (specs->flags & FLAG_PRECISION)
-		dst_len = ft_wstrto8(NULL, string, specs->precision);
+		dst_len = ft_printf_string_utfcpy(NULL, string, specs->precision);
 	else
-		dst_len = ft_wstrto8(NULL, string, -1);
+		dst_len = ft_printf_string_utfcpy(NULL, string, -1);
 	if (dst_len == (size_t)-1)
 		return (-1);
-	real_len = ((size_t)specs->width > dst_len ? specs->width : dst_len);
+	width_len = ((size_t)specs->width > dst_len ? specs->width - dst_len : 0);
 	if (specs->flags & FLAG_MINUS)
-	{
-		ft_wstrto8(res, string, dst_len);
-		res += dst_len;
-		ft_memset(res, ' ', real_len - dst_len);
-	}
+		ft_printf_string_utfcpy(res, string, dst_len);
+	if (specs->flags & FLAG_ZERO)
+		ft_printf_bufset(res, '0', width_len);
 	else
-	{
-		ft_memset(res, " 0"[!!(specs->flags & FLAG_ZERO)], real_len - dst_len);
-		res += real_len - dst_len;
-		ft_wstrto8(res, string, dst_len);
-	}
-	return (real_len);
+		ft_printf_bufset(res, ' ', width_len);
+	if ((specs->flags & FLAG_MINUS) == 0)
+		ft_printf_string_utfcpy(res, string, dst_len);
+	return (width_len + dst_len);
 }
 
 /*
-**	ft_wstrto8
-** if dst == NULL: return length in bytes without writing
+**	ft_printf_string_utfcpy
+** if res == NULL: return length in bytes without writing
 ** if n == -1: SIZE_T_MAX limit (==unlimited)
 ** if UTF-32 >= 1114112 (0x10FFFF): return error (-1)
 */
 
-size_t	ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32, size_t n)
+size_t	ft_printf_string_utfcpy(t_buf *res, const wchar_t *src_utf32, size_t n)
 {
+	char	char_arr[4];
 	int		char_size;
 	size_t	count;
 
@@ -128,11 +117,10 @@ size_t	ft_wstrto8(char *dst_utf8, const wchar_t *src_utf32, size_t n)
 		if (count + char_size > n)
 			break ;
 		count += char_size;
-		if (dst_utf8)
-			dst_utf8 += ft_wchrto8(dst_utf8, *src_utf32);
+		if (res && ft_wchrto8(char_arr, *src_utf32))
+			ft_printf_bufcpy(res, char_arr, char_size);
 		src_utf32++;
 	}
-	dst_utf8 ? *dst_utf8 = '\0' : 0;
 	return (count);
 }
 

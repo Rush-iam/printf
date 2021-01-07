@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/06 20:02:42 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/06 20:55:18 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 17:22:36 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,27 +41,32 @@ long long	ft_printf_int_get(va_list ap, const t_specs *specs)
 		return (va_arg(ap, unsigned int));
 }
 
-int			ft_printf_int(char *res, long long num, int base, const t_specs *s)
+int			ft_printf_int(t_buf *res, long long num, int base, const t_specs *s)
 {
 	char	num_str[23];
 	int		src_l;
 	int		prec_l;
 	int		width_l;
 
-	src_l = (s->type == 'd' || s->type == 'i') ?
-			ft_printf_itoa_signed(num_str, num, s) :
-			ft_printf_itoa_unsigned(num_str, num, base, s);
+	if (s->type == 'd' || s->type == 'i')
+		src_l = ft_printf_itoa_signed(num_str, num, s);
+	else
+		src_l = ft_printf_itoa_unsigned(num_str, num, base, s);
 	prec_l = (s->precision > src_l) ? s->precision - src_l : 0;
 	width_l = (s->width > (num_str[0] != 0) + prec_l + src_l) ?
 		s->width - (num_str[0] != 0) - (num_str[1] != 0) - prec_l - src_l : 0;
 	if ((s->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
-		ft_memset(res, ' ', width_l) && (res += width_l);
-	num_str[0] != '\0' ? *res++ = num_str[0] : 0;
-	num_str[1] != '\0' ? *res++ = num_str[1] : 0;
-	s->flags & FLAG_ZERO ? ft_memset(res, '0', width_l) && (res += width_l) : 0;
-	ft_memset(res, '0', prec_l) && (res += prec_l);
-	ft_memcpy(res, num_str + (23 - src_l), src_l) && (res += src_l);
-	s->flags & FLAG_MINUS ? ft_memset(res, ' ', width_l) : 0;
+		ft_printf_bufset(res, ' ', width_l);
+	if (num_str[0] != '\0')
+		ft_printf_bufset(res, num_str[0], 1);
+	if (num_str[1] != '\0')
+		ft_printf_bufset(res, num_str[1], 1);
+	if (s->flags & FLAG_ZERO)
+		ft_printf_bufset(res, '0', width_l);
+	ft_printf_bufset(res, '0', prec_l);
+	ft_printf_bufcpy(res, num_str + (23 - src_l), src_l);
+	if (s->flags & FLAG_MINUS)
+		ft_printf_bufset(res, ' ', width_l);
 	return (width_l + (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l);
 }
 

@@ -6,50 +6,89 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/06 20:55:18 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 17:53:08 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-int					ft_printf(const char *format, ...)
+void		ft_printf_bufcpy(t_buf *buf, const char *src, size_t n)
 {
-	char	res[65536];
-	int		char_count;
-	va_list	ap;
-
-	va_start(ap, format);
-	char_count = 0;
-	while (*format)
+	if (buf->len + n > sizeof(buf->str))
 	{
-		if (*format == '%')
+		write(STDOUT_FILENO, buf->str, buf->len);
+		buf->len = 0;
+		if (n > sizeof(buf->str))
 		{
-			format++;
-			char_count = ft_printf_format(res + char_count, ap, &format,
-											char_count);
-			if (char_count == -1)
-				return (-1);
+			write(STDOUT_FILENO, src, n);
+			n = 0;
 		}
-		else
-			res[char_count++] = *format++;
 	}
-	write(1, res, char_count);
-	va_end(ap);
-	return (char_count);
+	while (n--)
+		buf->str[buf->len++] = *src++;
 }
 
-int					ft_printf_format(char *res, va_list ap, const char **fstr,
-										int count)
+void		ft_printf_bufset(t_buf *buf, char c, size_t n)
+{
+	int	i;
+
+	if (buf->len + n >= sizeof(buf->str))
+	{
+		write(STDOUT_FILENO, buf->str, buf->len);
+		buf->len = 0;
+		while (n >= sizeof(buf->str))
+		{
+			i = 0;
+			while (i < (int)sizeof(buf->str))
+				buf->str[i++] = c;
+			write(STDOUT_FILENO, buf->str, sizeof(buf->str));
+			n -= sizeof(buf->str);
+		}
+	}
+	while (n--)
+		buf->str[buf->len++] = c;
+}
+
+int			ft_printf(const char *format, ...)
+{
+	int		total_count;
+	int		cur_count;
+	t_buf	res;
+	va_list	ap;
+	char	*percent_pos;
+
+	total_count = 0;
+	res.len = 0;
+	va_start(ap, format);
+	while ((percent_pos = ft_strchr(format, '%')))
+	{
+		total_count += percent_pos - format;
+		ft_printf_bufcpy(&res, format, percent_pos - format);
+		format = percent_pos + 1;
+		cur_count = ft_printf_format(&res, ap, &format);
+		if (cur_count == -1)
+			return (-1);
+		total_count += cur_count;
+	}
+	va_end(ap);
+	cur_count = ft_strlen(format);
+	ft_printf_bufcpy(&res, format, cur_count);
+	total_count += cur_count;
+	write(STDOUT_FILENO, res.str, res.len);
+	return (total_count);
+}
+
+int			ft_printf_format(t_buf *res, va_list ap, const char **format)
 {
 	t_specs	specs;
-	int		f_count;
+	int		count;
 
 	specs = (t_specs){0, 0, 0, 0, '\0'};
-	*fstr = ft_printf_parse_specs_1(ap, *fstr, &specs);
+	*format = ft_printf_parse_specs_1(ap, *format, &specs);
 	if (specs.type)
-		(*fstr)++;
+		(*format)++;
 
-#include <stdio.h>
+#include <stdio.h> //!!!!!!!!
 	printf("\nspecs.type = %c", specs.type);
 	printf("\nspecs.width = %d", specs.width);
 	printf("\nspecs.precision = %d", specs.precision);
@@ -63,26 +102,25 @@ int					ft_printf_format(char *res, va_list ap, const char **fstr,
 	if (specs.flags & FLAG_PRECISION) printf(".");
 	printf("\"\n");
 
-	f_count = 0;
+	count = 0;
 	if (specs.type == 's' && specs.len != LEN_L)
-		f_count = ft_printf_string(res, va_arg(ap, char *), &specs);
+		count = ft_printf_string(res, va_arg(ap, char *), &specs);
 	else if (specs.type == 's' && specs.len == LEN_L)
-		f_count = ft_printf_string_utf(res, va_arg(ap, wchar_t *), &specs);
+		count = ft_printf_string_utf(res, va_arg(ap, wchar_t *), &specs);
 	else if (specs.type == 'd' || specs.type == 'i' || specs.type == 'u')
-		f_count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 10, &specs);
+		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 10, &specs);
 	else if (specs.type == 'x' || specs.type == 'X' || specs.type == 'p')
-		f_count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 16, &specs);
+		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 16, &specs);
 //	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')
 //		count += reformat_float(res, ap, specs);
 //	else if (specs.type == 'n')
 //		put_count(va_arg(ap, int *), count, specs);
 	else if (specs.type == 'c' || specs.type)
-		f_count = ft_printf_char(res, ap, &specs);
-	return (f_count == -1 ? -1 : count + f_count);
+		count = ft_printf_char(res, ap, &specs);
+	return (count);
 }
 
-const char			*ft_printf_parse_specs_1(va_list ap, const char *fstr,
-											t_specs *s)
+const char	*ft_printf_parse_specs_1(va_list ap, const char *fstr, t_specs *s)
 {
 	const char	fields_list[] = "-+ 0#.lh*123456789";
 	const char	*flag;
@@ -111,7 +149,7 @@ const char			*ft_printf_parse_specs_1(va_list ap, const char *fstr,
 	return (ft_printf_parse_specs_2(fstr, s));
 }
 
-const char			*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
+const char	*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
 {
 	specs->type = *fstr;
 	if (specs->type == '\0')
@@ -140,7 +178,7 @@ const char			*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
 	return (fstr);
 }
 
-int					ft_printf_parse_atoi(const char **str)
+int			ft_printf_parse_atoi(const char **str)
 {
 	int	num;
 
