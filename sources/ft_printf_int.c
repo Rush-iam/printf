@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/06 20:02:42 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 17:22:36 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 19:40:40 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,27 +18,27 @@ long long	ft_printf_int_get(va_list ap, const t_specs *specs)
 		return ((unsigned long)va_arg(ap, void *));
 	else if (specs->type == 'd' || specs->type == 'i')
 	{
-		if (specs->len == LEN_LL)
+		if (specs->len == 0)
+			return (va_arg(ap, int));
+		else if (specs->len == LEN_LL)
 			return (va_arg(ap, long long int));
 		else if (specs->len == LEN_L)
 			return (va_arg(ap, long int));
-		else if (specs->len == LEN_H)
-			return ((short int)va_arg(ap, int));
 		else if (specs->len == LEN_HH)
 			return ((char)va_arg(ap, int));
-		else
-			return (va_arg(ap, int));
+		else if (specs->len == LEN_H)
+			return ((short int)va_arg(ap, int));
 	}
-	if (specs->len == LEN_LL)
+	if (specs->len == 0)
+		return (va_arg(ap, unsigned int));
+	else if (specs->len == LEN_LL)
 		return (va_arg(ap, unsigned long long int));
 	else if (specs->len == LEN_L)
 		return (va_arg(ap, unsigned long int));
-	else if (specs->len == LEN_H)
-		return ((unsigned short int)va_arg(ap, unsigned int));
 	else if (specs->len == LEN_HH)
 		return ((unsigned char)va_arg(ap, unsigned int));
-	else
-		return (va_arg(ap, unsigned int));
+	else if (specs->len == LEN_H)
+		return ((unsigned short int)va_arg(ap, unsigned int));
 }
 
 int			ft_printf_int(t_buf *res, long long num, int base, const t_specs *s)
@@ -101,10 +101,10 @@ int			ft_printf_itoa_signed(char *dst, long long num,
 int			ft_printf_itoa_unsigned(char *dst, unsigned long long num, int base,
 									const t_specs *specs)
 {
-	int			count;
-	int			prefix_0x;
-	const char	digits[] = "0123456789abcdef";
 	const char	digits_upper[] = "0123456789ABCDEF";
+	const char	digits[] = "0123456789abcdef";
+	int			prefix_0x;
+	int			count;
 
 	prefix_0x = specs->type == 'p' ||
 				(base == 16 && (specs->flags & FLAG_HASH) && num);

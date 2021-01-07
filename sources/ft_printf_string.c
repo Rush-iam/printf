@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/05 18:48:46 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 15:55:43 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 19:45:14 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ int		ft_printf_string(t_buf *res, const char *string, const t_specs *specs)
 {
 	size_t	src_len;
 	size_t	dst_len;
-	size_t	width_len;
+	int		width_len;
 
 	if (string == NULL)
 		string = "(null)";
@@ -66,7 +66,7 @@ int		ft_printf_string_utf(t_buf *res, const wchar_t *string,
 							const t_specs *specs)
 {
 	size_t	dst_len;
-	size_t	width_len;
+	int		width_len;
 
 	if (string == NULL)
 		string = L"(null)";

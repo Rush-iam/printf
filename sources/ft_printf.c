@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 17:55:28 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 19:09:06 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int			ft_printf(const char *format, ...)
 		total_count += percent_pos - format;
 		ft_printf_bufcpy(&res, format, percent_pos - format);
 		format = percent_pos + 1;
-		cur_count = ft_printf_format(&res, ap, &format);
+		cur_count = ft_printf_format(&res, ap, &format, total_count);
 		if (cur_count == -1)
 			return (-1);
 		total_count += cur_count;
@@ -41,7 +41,8 @@ int			ft_printf(const char *format, ...)
 	return (total_count);
 }
 
-int			ft_printf_format(t_buf *res, va_list ap, const char **format)
+int			ft_printf_format(t_buf *res, va_list ap, const char **format,
+															int total_count)
 {
 	t_specs	specs;
 	int		count;
@@ -51,19 +52,19 @@ int			ft_printf_format(t_buf *res, va_list ap, const char **format)
 	if (specs.type)
 		(*format)++;
 
-#include <stdio.h> //!!!!!!!!
-	printf("\nspecs.type = %c", specs.type);
-	printf("\nspecs.width = %d", specs.width);
-	printf("\nspecs.precision = %d", specs.precision);
-	printf("\nspecs.length = %hhd", specs.len);
-	printf("\nspecs.flags = \"");
-	if (specs.flags & FLAG_MINUS) printf("-");
-	if (specs.flags & FLAG_PLUS) printf("+");
-	if (specs.flags & FLAG_SPACE) printf(" ");
-	if (specs.flags & FLAG_ZERO) printf("0");
-	if (specs.flags & FLAG_HASH) printf("#");
-	if (specs.flags & FLAG_PRECISION) printf(".");
-	printf("\"\n");
+//#include <stdio.h> //!!!!!!!!
+//	printf("\nspecs.type = %c", specs.type);
+//	printf("\nspecs.width = %d", specs.width);
+//	printf("\nspecs.precision = %d", specs.precision);
+//	printf("\nspecs.length = %hhd", specs.len);
+//	printf("\nspecs.flags = \"");
+//	if (specs.flags & FLAG_MINUS) printf("-");
+//	if (specs.flags & FLAG_PLUS) printf("+");
+//	if (specs.flags & FLAG_SPACE) printf(" ");
+//	if (specs.flags & FLAG_ZERO) printf("0");
+//	if (specs.flags & FLAG_HASH) printf("#");
+//	if (specs.flags & FLAG_PRECISION) printf(".");
+//	printf("\"\n");
 
 	count = 0;
 	if (specs.type == 's' && specs.len != LEN_L)
@@ -76,11 +77,27 @@ int			ft_printf_format(t_buf *res, va_list ap, const char **format)
 		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 16, &specs);
 //	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')
 //		count += reformat_float(res, ap, specs);
-//	else if (specs.type == 'n')
-//		put_count(va_arg(ap, int *), count, specs);
+	else if (specs.type == 'n')
+		ft_printf_put_count(ap, total_count, specs.len);
 	else if (specs.type == 'c' || specs.type)
 		count = ft_printf_char(res, ap, &specs);
 	return (count);
+}
+
+void		ft_printf_put_count(va_list ap, int count, char length)
+{
+	void	*ptr;
+
+	if (length == 0 && (ptr = va_arg(ap, int *)))
+		*(int *)ptr = count;
+	else if (length == LEN_LL && (ptr = va_arg(ap, long long int *)))
+		*(long long int *)ptr = count;
+	else if (length == LEN_L && (ptr = va_arg(ap, long int *)))
+		*(long int *)ptr = count;
+	else if (length == LEN_HH && (ptr = va_arg(ap, char *)))
+		*(char *)ptr = (char)count;
+	else if (length == LEN_H && (ptr = va_arg(ap, short int *)))
+		*(short int *)ptr = (short int)count;
 }
 
 void		ft_printf_bufcpy(t_buf *buf, const char *src, size_t n)

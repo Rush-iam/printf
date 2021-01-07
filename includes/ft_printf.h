@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 17:52:18 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/07 18:44:47 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,14 +54,15 @@ typedef struct		s_specs
 
 int					ft_printf(const char *format, ...);
 int					ft_printf_format(t_buf *res, va_list ap,
-														const char **format);
+										const char **format, int total_count);
+void				ft_printf_put_count(va_list ap, int count, char length);
+void				ft_printf_bufcpy(t_buf *buf, const char *src, size_t n);
+void				ft_printf_bufset(t_buf *buf, char c, size_t n);
+
 const char			*ft_printf_parse_specs_1(va_list ap, const char *fstr,
 																t_specs *s);
 const char			*ft_printf_parse_specs_2(const char *fstr, t_specs *specs);
 int					ft_printf_parse_atoi(const char **str);
-
-void				ft_printf_bufcpy(t_buf *buf, const char *src, size_t n);
-void				ft_printf_bufset(t_buf *buf, char c, size_t n);
 
 int					ft_printf_char(t_buf *res, va_list ap,
 														const t_specs *specs);
