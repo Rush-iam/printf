@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/06 20:02:42 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 21:02:47 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/08 17:36:04 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,31 +41,32 @@ long long	ft_printf_int_get(va_list ap, const t_specs *specs)
 		return (va_arg(ap, unsigned int));
 }
 
-int			ft_printf_int(t_buf *res, long long num, int base, const t_specs *s)
+int			ft_printf_int(t_buf *res, long long num, int base,
+							const t_specs *specs)
 {
 	char	num_str[23];
 	int		src_l;
 	int		prec_l;
 	int		width_l;
 
-	if (s->type == 'd' || s->type == 'i')
-		src_l = ft_printf_itoa_signed(num_str, num, s);
+	if (specs->type == 'd' || specs->type == 'i')
+		src_l = ft_printf_itoa_signed(num_str, num, specs);
 	else
-		src_l = ft_printf_itoa_unsigned(num_str, num, base, s);
+		src_l = ft_printf_itoa_unsigned(num_str, num, base, specs);
 	prec_l = 0;
-	if (s->precision > src_l)
-		prec_l = s->precision - src_l;
+	if (specs->precision > src_l)
+		prec_l = specs->precision - src_l;
 	width_l = 0;
-	if (s->width > (num_str[0] != '\0') + (num_str[0] != '\0') + prec_l + src_l)
-		width_l = s->width - !!num_str[0] - !!num_str[1] - prec_l - src_l;
-	if ((s->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
+	if (specs->width > (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l)
+		width_l = specs->width - !!num_str[0] - !!num_str[1] - prec_l - src_l;
+	if ((specs->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
 		ft_printf_bufset(res, ' ', width_l);
-	ft_printf_bufcpy(res, num_str, (num_str[0] != '\0') + (num_str[1] != '\0'));
-	if (s->flags & FLAG_ZERO)
+	ft_printf_bufcpy(res, num_str, (num_str[0] != 0) + (num_str[1] != 0));
+	if (specs->flags & FLAG_ZERO)
 		ft_printf_bufset(res, '0', width_l);
 	ft_printf_bufset(res, '0', prec_l);
 	ft_printf_bufcpy(res, num_str + (23 - src_l), src_l);
-	if (s->flags & FLAG_MINUS)
+	if (specs->flags & FLAG_MINUS)
 		ft_printf_bufset(res, ' ', width_l);
 	return (width_l + (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l);
 }

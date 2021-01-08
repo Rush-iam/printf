@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 22:39:38 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/08 23:52:27 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,77 @@ int			ft_printf(const char *format, ...)
 	ft_printf_bufcpy(&res, format, cur_count);
 	write(STDOUT_FILENO, res.str, res.len);
 	return (res.total_count);
+}
+
+int			infin_mult(char *dst, int exponent, long long mantissa)
+{
+//	if (exponent == 0)
+//		dst[0] += 1;
+//	else if (exponent > 0)
+//	{
+//
+//	}
+//	else if (exponent < 0)
+//	{
+//
+//	}
+}
+
+int			ft_printf_ftoa(char *dst, double num, const t_specs *specs)
+{
+	const int	exponent = ((*(long long *)&num >> 52) & 0b11111111111) - 1023;
+	int			i;
+	long long	mantissa;
+
+	if (num >= 0)
+	{
+		if (specs->flags & FLAG_PLUS)
+			dst[0] = '+';
+		else if (specs->flags & FLAG_SPACE)
+			dst[0] = ' ';
+		else
+			dst[0] = '\0';
+	}
+	else
+		dst[0] = '-';
+	dst++;
+	ft_memset(dst, 0, sizeof(dst) - 1);
+	i = 1;
+	while (i <= 52 && (*(long long *)&num & (1LL << (i - 1))) == 0)
+		i++;
+	mantissa = (*(long long *)&num &
+						0b1111111111111111111111111111111111111111111111111111);
+	mantissa |= (1LL << 52); // only if not denormalized
+	mantissa >>= (i - 1);
+	printf("REAL: exp = %d; mantissa = %lld\n", exponent - (53 - i), mantissa);
+	return (infin_mult(dst, exponent - (53 - i), mantissa));
+}
+
+int			ft_printf_float(t_buf *res, double num, const t_specs *specs)
+{
+	char	float_str[666];
+	int		src_l;
+	int		prec_l;
+	int		width_l;
+
+	src_l = ft_printf_ftoa(float_str, num, specs);
+	return (0);
+	prec_l = 0;
+	if (specs->precision > src_l)
+		prec_l = specs->precision - src_l;
+	width_l = 0;
+	if (specs->width > (float_str[0] != '\0') + prec_l + src_l)
+		width_l = specs->width - (float_str[0] != '\0') - prec_l - src_l;
+	if ((specs->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
+		ft_printf_bufset(res, ' ', width_l);
+	ft_printf_bufcpy(res, float_str, (float_str[0] != '\0'));
+	if (specs->flags & FLAG_ZERO)
+		ft_printf_bufset(res, '0', width_l);
+	ft_printf_bufset(res, '0', prec_l);
+	ft_printf_bufcpy(res, float_str + (23 - src_l), src_l);
+	if (specs->flags & FLAG_MINUS)
+		ft_printf_bufset(res, ' ', width_l);
+	return (width_l + (float_str[0] != '\0') + prec_l + src_l);
 }
 
 int			ft_printf_format(t_buf *res, va_list ap, const char **format)
@@ -73,8 +144,8 @@ int			ft_printf_format(t_buf *res, va_list ap, const char **format)
 		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 10, &specs);
 	else if (specs.type == 'x' || specs.type == 'X' || specs.type == 'p')
 		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 16, &specs);
-//	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')
-//		count += reformat_float(res, ap, specs);
+	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')
+		count = ft_printf_float(res, va_arg(ap, double), &specs);
 	else if (specs.type == 'n')
 		ft_printf_put_count(ap, res->total_count, specs.len);
 	else if (specs.type == 'c' || specs.type)

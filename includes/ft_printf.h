@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 18:55:30 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/08 18:30:16 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,9 @@ typedef struct		s_buf
 
 typedef struct		s_specs
 {
-	char			flags;
 	int				width;
 	int				precision;
+	char			flags;
 	char			len;
 	char			type;
 }					t_specs;
@@ -76,7 +76,7 @@ size_t				ft_printf_string_utfcpy(t_buf *res,
 int					ft_wchrto8(char *dst_utf8, wchar_t src_utf32);
 
 int					ft_printf_int(t_buf *res, long long num, int base,
-															const t_specs *s);
+														const t_specs *specs);
 long long			ft_printf_int_get(va_list ap, const t_specs *specs);
 int					ft_printf_itoa_signed(char *dst, long long num,
 														const t_specs *specs);

@@ -37,7 +37,7 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.c
 clean:
 	$(RM) $(OBJ)
 	$(RM) $(DEP)
-	$(RM)r $(OBJ_DIR)
+	rmdir $(OBJ_DIR)
 	$(MAKE) -C $(LIB_DIR) $@
 fclean: clean
 	$(RM) $(NAME)
