@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/08 23:52:27 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/11 23:08:09 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,58 +40,111 @@ int			ft_printf(const char *format, ...)
 	return (res.total_count);
 }
 
-int			infin_mult(char *dst, int exponent, long long mantissa)
+int			infin_mult(char *dst, int dstsize, int max_shift, __uint128_t mult)
 {
-//	if (exponent == 0)
-//		dst[0] += 1;
-//	else if (exponent > 0)
-//	{
-//
-//	}
-//	else if (exponent < 0)
-//	{
-//
-//	}
+	char		temp[dstsize];
+	int			shift;
+	int			i;
+	int			cur_i;
+
+	ft_memcpy(temp + dstsize - max_shift, dst + dstsize - max_shift, max_shift);
+	ft_memset(dst, 0, dstsize);
+	shift = 0;
+	while (mult)
+	{
+		i = 0;
+		while (i < max_shift)
+		{
+			cur_i = dstsize - ++i;
+			dst[cur_i - shift] += temp[cur_i] * (mult % 10);
+			if (dst[cur_i - shift] >= 10)
+			{
+				dst[cur_i - shift - 1] += dst[cur_i - shift] / 10;
+				dst[cur_i - shift] %= 10;
+			}
+		}
+		shift++;
+		mult /= 10;
+	}
+	return (shift + i - 1 + (dst[dstsize - shift - i] != 0));
 }
 
-int			ft_printf_ftoa(char *dst, double num, const t_specs *specs)
+int	ft_printf_ftoa_2(char *dst, int dstsize, int exponent, long long mantissa)
 {
-	const int	exponent = ((*(long long *)&num >> 52) & 0b11111111111) - 1023;
+	int			max_shift;
 	int			i;
-	long long	mantissa;
 
-	if (num >= 0)
+	max_shift = 0;
+	while (mantissa)
+	{
+		dst[dstsize - 1 - max_shift] = mantissa % 10;
+		mantissa /= 10;
+		max_shift += 1;
+	}
+	if (exponent >= 0)
+	{
+		while (exponent)
+		{
+			max_shift = (exponent > 127) ?
+				infin_mult(dst, dstsize, max_shift, (__uint128_t)1 << 127) :
+				infin_mult(dst, dstsize, max_shift, (__uint128_t)1 << exponent);
+			exponent = (exponent > 127) ? exponent - 127 : 0;
+		}
+	}
+	else if (exponent < 0)
+	{
+	}
+	i = dstsize - max_shift;
+	while (i < dstsize)
+		dst[i++] += '0';
+	return (max_shift);
+}
+
+int	ft_printf_ftoa(char *dst, int dstsize, double num, const t_specs *specs)
+{
+	const long long	num_l = *(long long *)&num;
+	int				i;
+	const int		exponent = ((num_l >> 52) & 0b11111111111) - 1023;
+	long long		mantissa;
+
+	if (num_l >= 0)
 	{
 		if (specs->flags & FLAG_PLUS)
-			dst[0] = '+';
+			dst++[0] = '+';
 		else if (specs->flags & FLAG_SPACE)
-			dst[0] = ' ';
+			dst++[0] = ' ';
 		else
-			dst[0] = '\0';
+			dst++[0] = '\0';
 	}
 	else
-		dst[0] = '-';
-	dst++;
-	ft_memset(dst, 0, sizeof(dst) - 1);
-	i = 1;
-	while (i <= 52 && (*(long long *)&num & (1LL << (i - 1))) == 0)
+		dst++[0] = '-';
+	mantissa = (num_l & 0b1111111111111111111111111111111111111111111111111111);
+	if (exponent == -1023 && mantissa == 0)
+	{
+		dst[dstsize - 2] = '0';
+		return (1);
+	}
+	if (exponent != -1023)
+		mantissa |= (1LL << 52);
+	i = 0;
+	while (i <= 52 && (num_l & (1LL << i)) == 0)
 		i++;
-	mantissa = (*(long long *)&num &
-						0b1111111111111111111111111111111111111111111111111111);
-	mantissa |= (1LL << 52); // only if not denormalized
-	mantissa >>= (i - 1);
-	printf("REAL: exp = %d; mantissa = %lld\n", exponent - (53 - i), mantissa);
-	return (infin_mult(dst, exponent - (53 - i), mantissa));
+	mantissa >>= i;
+	printf("REAL exp = %d; mantissa = %lld\n", exponent - (52 - i), mantissa);//
+	return (ft_printf_ftoa_2(dst, dstsize - 1, exponent - (52 - i), mantissa));
 }
 
 int			ft_printf_float(t_buf *res, double num, const t_specs *specs)
 {
-	char	float_str[666];
+	char	float_str[341];
 	int		src_l;
 	int		prec_l;
 	int		width_l;
 
-	src_l = ft_printf_ftoa(float_str, num, specs);
+	src_l = ft_printf_ftoa(float_str, sizeof(float_str), num, specs);
+	ft_printf_bufcpy(res, float_str, (float_str[0] != '\0'));
+	ft_printf_bufcpy(res, float_str + (sizeof(float_str) - src_l), src_l);
+	printf("\nE=%d\n", src_l - 1); //
 	return (0);
 	prec_l = 0;
 	if (specs->precision > src_l)
