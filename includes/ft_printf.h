@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/08 18:30:16 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/12 21:05:59 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <unistd.h>
 # include <stdarg.h>
 # include <wchar.h>
+# include <math.h>
 
 /*
 **	flags:	'-'	=1		'+'	=2		' '	=4		'0'	=8		'#'	=16		'.' = 32
@@ -37,6 +38,13 @@
 # define LEN_L	0b0111
 # define LEN_LL	0b1111
 
+typedef struct		s_float
+{
+	char			sign;
+	char			s[751];
+	short int		point_pos;
+}					t_float;
+
 typedef struct		s_buf
 {
 	char			str[4096];
@@ -46,11 +54,11 @@ typedef struct		s_buf
 
 typedef struct		s_specs
 {
-	int				width;
-	int				precision;
 	char			flags;
 	char			len;
 	char			type;
+	int				width;
+	int				precision;
 }					t_specs;
 
 int					ft_printf(const char *format, ...);
