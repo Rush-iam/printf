@@ -54,8 +54,8 @@ int			ft_printf_int(t_buf *res, long long num, int base,
 	else
 		src_l = ft_printf_itoa_unsigned(num_str, num, base, specs);
 	prec_l = 0;
-	if (specs->precision > src_l)
-		prec_l = specs->precision - src_l;
+	if (specs->prec > src_l)
+		prec_l = specs->prec - src_l;
 	width_l = 0;
 	if (specs->width > (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l)
 		width_l = specs->width - !!num_str[0] - !!num_str[1] - prec_l - src_l;

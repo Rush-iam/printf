@@ -29,9 +29,9 @@ const char	*ft_printf_parse_specs_1(va_list ap, const char *fstr, t_specs *s)
 						va_arg(ap, int) : ft_printf_parse_atoi(&fstr);
 		if (*fstr == '.' && fstr++)
 		{
-			s->precision = (*fstr++ == '*') ?
-						va_arg(ap, int) : ft_printf_parse_atoi(&fstr);
-			s->precision >= 0 ? s->flags |= FLAG_PRECISION : 0;
+			s->prec = (*fstr++ == '*') ?
+					  va_arg(ap, int) : ft_printf_parse_atoi(&fstr);
+			s->prec >= 0 ? s->flags |= FLAG_PRECISION : 0;
 		}
 		if (*fstr == 'h')
 			*++fstr == 'h' ? (s->len |= LEN_HH) && fstr++ : (s->len |= LEN_H);
@@ -50,13 +50,13 @@ const char	*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
 		specs->len = LEN_L;
 	if (ft_strchr("diuxX", specs->type) && (specs->flags & FLAG_PRECISION))
 		specs->flags &= ~FLAG_ZERO;
-	if (specs->precision < 0 || (specs->flags & FLAG_PRECISION) == 0)
+	if (specs->prec < 0 || (specs->flags & FLAG_PRECISION) == 0)
 	{
 		specs->flags &= ~FLAG_PRECISION;
 		if (ft_strchr("feg", specs->type))
-			specs->precision = 6;
+			specs->prec = 6;
 		else if (ft_strchr("diuxXp", specs->type))
-			specs->precision = 1;
+			specs->prec = 1;
 	}
 	if (specs->width < 0)
 	{

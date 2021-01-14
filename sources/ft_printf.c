@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/12 22:08:12 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/14 23:34:54 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,144 +40,246 @@ int			ft_printf(const char *format, ...)
 	return (res.total_count);
 }
 
-int			infin_mult(t_float *dst, int max_shift, __uint128_t mult)
+int			infin_mult(t_float *dst, int m1_len, __uint128_t m2)
 {
-	char	temp[sizeof(dst->s)];
-	int		shift;
-	int		i;
-	int		cur_i;
+	char	temp[sizeof(dst->str)];
+	int		m2_shift;
+	int		m1_i;
+	int		idx;
 
-	ft_memcpy(temp + sizeof(dst->s) - max_shift,
-			dst->s + sizeof(dst->s) - max_shift, max_shift);
-	ft_memset(dst->s, 0, sizeof(dst->s));
-	shift = 0;
-	while (mult)
+	ft_memcpy(temp + sizeof(dst->str) - m1_len,
+								dst->str + sizeof(dst->str) - m1_len, m1_len);
+	ft_memset(dst->str, 0, sizeof(dst->str));
+	m2_shift = 0;
+	while (m2)
 	{
-		i = 0;
-		while (i < max_shift)
+		m1_i = 0;
+		while (m1_i < m1_len)
 		{
-			cur_i = sizeof(dst->s) - ++i;
-			dst->s[cur_i - shift] += temp[cur_i] * (mult % 10);
-			if (dst->s[cur_i - shift] >= 10)
+			idx = sizeof(dst->str) - ++m1_i;
+			dst->str[idx - m2_shift] += temp[idx] * (m2 % 10);
+			if (dst->str[idx - m2_shift] >= 10)
 			{
-				dst->s[cur_i - shift - 1] += dst->s[cur_i - shift] / 10;
-				dst->s[cur_i - shift] %= 10;
+				dst->str[idx - m2_shift - 1] += dst->str[idx - m2_shift] / 10;
+				dst->str[idx - m2_shift] %= 10;
 			}
 		}
-		shift++;
-		mult /= 10;
+		++m2_shift && (m2 /= 10);
 	}
-	return (shift + i - 1 + (dst->s[sizeof(dst->s) - shift - i] != 0));
+	return (m1_len + m2_shift - 1 + (dst->str[idx - m2_shift] != 0));
 }
 
-int			infin_div(t_float *dst, int max_shift, __uint128_t div)
+int			infin_div(t_float *dst, int num_len, __uint128_t div)
 {
 	unsigned long long	mult;
 	int					cur_div;
 
-	dst->point_pos = div;
+	dst->dot = div;
 	while (div > 19)
 	{
 		div -= 19;
-		max_shift = infin_mult(dst, max_shift,
+		num_len = infin_mult(dst, num_len,
 								10000000000000000000ULL * (1. / (1 << 19)));
 	}
 	cur_div = div;
 	mult = 10;
 	while (--div)
 		mult *= 10;
-	max_shift = infin_mult(dst, max_shift, mult * (1. / (1 << cur_div)));
-	return (max_shift);
+	num_len = infin_mult(dst, num_len, mult * (1. / (1 << cur_div)));
+	return (num_len);
 }
 
-int	ft_printf_ftoa_2(t_float *dst, int exponent, long long mantissa)
+int	ft_printf_float_round(t_float *dst, int num_l, t_specs *s)
 {
-	int	max_shift;
-	int	i;
+	const int	prec_start = (s->type == 'f') ? dst->dot : num_l - 1;
+	const int	prec_end = sizeof(dst->str) - prec_start + s->prec;
+	int			i;
+	int			n;
 
-	max_shift = 0;
+	i = prec_end;
+	n = sizeof(dst->str);
+	while (i < (int)sizeof(dst->str) && dst->str[i] >= 5)
+		i++;
+	while (--i >= prec_end)
+		if (dst->str[i] > 5 || (dst->str[i] == 5 &&
+						(dst->str[i - 1] % 2 || i + 1 < (int)sizeof(dst->str))))
+		{
+			n = i - 1;
+			dst->str[n]++;
+			while (dst->str[n] > 9)
+			{
+				dst->str[n--] = 0;
+				dst->str[n]++;
+			}
+		}
+	i = 0;
+	while (i < (int)sizeof(dst->str))
+		dst->str[i++] += '0';
+	return (num_l >= (int)sizeof(dst->str) - n ? num_l : sizeof(dst->str) - n);
+}
+
+int	ft_printf_ftoa_2(t_float *dst, int exp_bin, long long mantissa, t_specs *s)
+{
+	int	num_len;
+
+	num_len = 0;
 	while (mantissa)
 	{
-		dst->s[sizeof(dst->s) - 1 - max_shift++] = mantissa % 10;
+		dst->str[sizeof(dst->str) - 1 - num_len++] = mantissa % 10;
 		mantissa /= 10;
 	}
-	while(exponent > 127)
+	while (exp_bin > 127)
 	{
-		max_shift = infin_mult(dst, max_shift, (__uint128_t)1 << 127);
-		exponent -= 127;
+		num_len = infin_mult(dst, num_len, (__uint128_t)1 << 127);
+		exp_bin -= 127;
 	}
-	if (exponent >= 0)
-		max_shift = infin_mult(dst, max_shift, (__uint128_t)1 << exponent);
-	else if (exponent < 0)
-		max_shift = infin_div(dst, max_shift, -exponent);
-	i = sizeof(dst->s) - max_shift;
-	while (i < (int)sizeof(dst->s))
-		dst->s[i++] += '0';
-	return (max_shift);
+	if (exp_bin >= 0)
+		num_len = infin_mult(dst, num_len, (__uint128_t)1 << exp_bin);
+	else if (exp_bin < 0)
+		num_len = infin_div(dst, num_len, -exp_bin);
+	return (ft_printf_float_round(dst, num_len, s));
 }
 
-int	ft_printf_ftoa(t_float *dst, double num, const t_specs *specs)
+int		ft_printf_ftoa(t_float *dst, double num, t_specs *s)
 {
 	const long long	num_l = *(long long *)&num;
-	int				exponent;
+	int				exp_bin;
 	long long		mantissa;
 
-	dst->sign = '\0';
-	if (num != num && ft_memcpy(dst->s + sizeof(dst->s) - 3, "nan", 3))
-		return (3);
+	dst->dot = 0;
 	if (num_l < 0)
 		dst->sign = '-';
-	else if (specs->flags & FLAG_PLUS)
+	else if (s->flags & FLAG_PLUS)
 		dst->sign = '+';
-	else if (specs->flags & FLAG_SPACE)
+	else if (s->flags & FLAG_SPACE)
 		dst->sign = ' ';
-	if (num == 0 && (dst->s[sizeof(dst->s) - 1] = '0'))
+	else
+		dst->sign = '\0';
+	if (num == 0 && (dst->str[sizeof(dst->str) - 1] = '0'))
 		return (1);
-	if ((num == INFINITY || num == -INFINITY)
-						&& ft_memcpy(dst->s + sizeof(dst->s) - 3, "inf", 3))
-		return (3);
-	exponent = num_l >> 52 & 0b11111111111;
+	exp_bin = num_l >> 52 & 0b11111111111;
 	mantissa = num_l & 0b1111111111111111111111111111111111111111111111111111;
-	mantissa = (exponent != 0) ? mantissa | (1LL << 52) : mantissa << 1;
+	mantissa = (exp_bin != 0) ? mantissa | (1LL << 52) : mantissa << 1;
 	while (mantissa && (mantissa & 1) == 0)
-		++exponent && (mantissa >>= 1);
-	printf("REAL exp = %d; mantissa = %lld\n", exponent - 1023 - 52, mantissa);//
-	return (ft_printf_ftoa_2(dst, exponent - 1023 - 52, mantissa));
+	{
+		++exp_bin;
+		mantissa >>= 1;
+	}
+	return (ft_printf_ftoa_2(dst, exp_bin - 1023 - 52, mantissa, s));
 }
 
-int			ft_printf_float(t_buf *res, double num, const t_specs *specs)
+void		ft_printf_float_norm(t_buf *res, t_float *f, t_specs *specs)
 {
-	t_float	float_str;
-	int		src_l;
-	int		prec_l;
-	int		width_l;
-
-	float_str.point_pos = 0;
-	src_l = ft_printf_ftoa(&float_str, num, specs);
-	ft_printf_bufcpy(res, &float_str.sign, (float_str.sign != '\0'));
-	ft_printf_bufcpy(res, float_str.s + (sizeof(float_str.s) - src_l), src_l);
-	printf("\nsrc_l=%d; point=%d; e=%d\n", src_l, float_str.point_pos,
-		   src_l - float_str.point_pos - 1); //
-	return (0);
-//	prec_l = 0;
-//	if (specs->precision > src_l)
-//		prec_l = specs->precision - src_l;
-//	width_l = 0;
-//	if (specs->width > (float_str[0] != '\0') + prec_l + src_l)
-//		width_l = specs->width - (float_str[0] != '\0') - prec_l - src_l;
-//	if ((specs->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
-//		ft_printf_bufset(res, ' ', width_l);
-//	ft_printf_bufcpy(res, float_str, (float_str[0] != '\0'));
-//	if (specs->flags & FLAG_ZERO)
-//		ft_printf_bufset(res, '0', width_l);
-//	ft_printf_bufset(res, '0', prec_l);
-//	ft_printf_bufcpy(res, float_str + (23 - src_l), src_l);
-//	if (specs->flags & FLAG_MINUS)
-//		ft_printf_bufset(res, ' ', width_l);
-//	return (width_l + (float_str[0] != '\0') + prec_l + src_l);
+	if (f->int_l)
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l, f->int_l);
+	ft_printf_bufset(res, '0', f->int_l == 0);
+	ft_printf_bufset(res, '.', specs->prec || specs->flags & FLAG_HASH);
+	if (f->dot > (int)sizeof(f->str))
+	{
+		if (specs->prec < f->dot - (int)sizeof(f->str))
+			ft_printf_bufset(res, '0', specs->prec);
+		else
+			ft_printf_bufset(res, '0', f->dot - sizeof(f->str));
+	}
+	if (specs->prec < f->dot && specs->prec > f->dot - (int)sizeof(f->str))
+		ft_printf_bufcpy(res, f->str, specs->prec - (f->dot - sizeof(f->str)));
+	else if (f->dot < (int)sizeof(f->str) && specs->prec < f->dot)
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l + f->int_l,
+																specs->prec);
+	else if (f->dot < (int)sizeof(f->str))
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->dot, f->dot);
+	else if (specs->prec >= f->dot)
+		ft_printf_bufcpy(res, f->str, sizeof(f->str));
+	if (specs->prec > f->dot)
+		ft_printf_bufset(res, '0', specs->prec - f->dot);
 }
 
-int			ft_printf_format(t_buf *res, va_list ap, const char **format)
+void		ft_printf_float_exp(t_buf *res, t_float *f, t_specs *s)
+{
+	int		exp;
+	char	exp_str[3];
+	int		i;
+
+	exp = f->src_l - f->dot - 1;
+	ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l, 1);
+	ft_printf_bufset(res, '.', s->prec || s->flags & FLAG_HASH);
+	if (s->prec < f->src_l)
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l + 1, s->prec);
+	else
+	{
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - (f->src_l - 1),
+																f->src_l - 1);
+		ft_printf_bufset(res, '0', s->prec - (f->src_l - 1));
+	}
+	ft_printf_bufset(res, 'e', 1);
+	ft_printf_bufset(res, (exp >= 0 ? '+' : '-'), 1);
+	(exp < 0) ? exp *= -1 : 0;
+	i = 3;
+	while (i > 1 || exp)
+	{
+		exp_str[--i] = '0' + exp % 10;
+		exp /= 10;
+	}
+	ft_printf_bufcpy(res, exp_str + i, 3 - i);
+}
+
+int		ft_printf_float_exceptions(t_buf *res, double num, t_specs *specs)
+{
+	const int	sign = (*(long long *)&num < 0);
+	int			str_len;
+	int			width_len;
+
+	str_len = 3 + (num == num &&
+							(sign || specs->flags & (FLAG_PLUS | FLAG_SPACE)));
+	width_len = (specs->width > str_len) ? specs->width - str_len : 0;
+	if ((specs->flags & FLAG_MINUS) == 0)
+		ft_printf_bufset(res, ' ', width_len);
+	if (num != num)
+		ft_printf_bufcpy(res, "nan", 3);
+	else
+	{
+		if (sign)
+			ft_printf_bufset(res, '-', 1);
+		else if (specs->flags & FLAG_PLUS)
+			ft_printf_bufset(res, '+', 1);
+		else if (specs->flags & FLAG_SPACE)
+			ft_printf_bufset(res, ' ', 1);
+		ft_printf_bufcpy(res, "inf", 3);
+	}
+	if (specs->flags & FLAG_MINUS)
+		ft_printf_bufset(res, ' ', width_len);
+	return (width_len + str_len);
+}
+
+int		ft_printf_float(t_buf *res, double num, t_specs *specs)
+{
+	t_float	f_str;
+
+	if (num != num || num == INFINITY || num == -INFINITY)
+		return (ft_printf_float_exceptions(res, num, specs));
+	f_str.src_l = ft_printf_ftoa(&f_str, num, specs);
+	f_str.int_l = (f_str.src_l > f_str.dot) ? f_str.src_l - f_str.dot : 0;
+	f_str.numout_l = (specs->type == 'f') ?
+		(f_str.sign != 0) + f_str.int_l + (f_str.int_l == 0) +
+				(specs->prec || specs->flags & FLAG_HASH) + specs->prec :
+		(f_str.sign != 0) + 1 + (specs->prec || specs->flags & FLAG_HASH) +
+				specs->prec + 4 + ((f_str.src_l - f_str.dot - 1) / 100 != 0);
+	f_str.width_l =
+			(specs->width > f_str.numout_l) ? specs->width - f_str.numout_l : 0;
+	if ((specs->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
+		ft_printf_bufset(res, ' ', f_str.width_l);
+	ft_printf_bufset(res, f_str.sign, f_str.sign != '\0');
+	if (specs->flags & FLAG_ZERO)
+		ft_printf_bufset(res, '0', f_str.width_l);
+	(specs->type == 'f') ?
+		ft_printf_float_norm(res, &f_str, specs) :
+		ft_printf_float_exp(res, &f_str, specs);
+	if (specs->flags & FLAG_MINUS)
+		ft_printf_bufset(res, ' ', f_str.width_l);
+	return (f_str.width_l + f_str.numout_l);
+}
+
+int		ft_printf_format(t_buf *res, va_list ap, const char **format)
 {
 	t_specs	specs;
 	int		count;
@@ -186,21 +288,6 @@ int			ft_printf_format(t_buf *res, va_list ap, const char **format)
 	*format = ft_printf_parse_specs_1(ap, *format, &specs);
 	if (specs.type)
 		(*format)++;
-
-//#include <stdio.h> //!!!!!!!!
-//	printf("\nspecs.type = %c", specs.type);
-//	printf("\nspecs.width = %d", specs.width);
-//	printf("\nspecs.precision = %d", specs.precision);
-//	printf("\nspecs.length = %hhd", specs.len);
-//	printf("\nspecs.flags = \"");
-//	if (specs.flags & FLAG_MINUS) printf("-");
-//	if (specs.flags & FLAG_PLUS) printf("+");
-//	if (specs.flags & FLAG_SPACE) printf(" ");
-//	if (specs.flags & FLAG_ZERO) printf("0");
-//	if (specs.flags & FLAG_HASH) printf("#");
-//	if (specs.flags & FLAG_PRECISION) printf(".");
-//	printf("\"\n");
-
 	count = 0;
 	if (specs.type == 's' && specs.len != LEN_L)
 		count = ft_printf_string(res, va_arg(ap, char *), &specs);

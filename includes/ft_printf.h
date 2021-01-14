@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/12 21:05:59 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/14 23:34:54 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,16 +38,11 @@
 # define LEN_L	0b0111
 # define LEN_LL	0b1111
 
-typedef struct		s_float
-{
-	char			sign;
-	char			s[751];
-	short int		point_pos;
-}					t_float;
+# define BUFFER_SIZE 4096
 
 typedef struct		s_buf
 {
-	char			str[4096];
+	char			str[BUFFER_SIZE];
 	int				len;
 	int				total_count;
 }					t_buf;
@@ -58,8 +53,19 @@ typedef struct		s_specs
 	char			len;
 	char			type;
 	int				width;
-	int				precision;
+	int				prec;
 }					t_specs;
+
+typedef struct		s_float
+{
+	char			sign;
+	char			str[751];
+	short int		dot;
+	short int		src_l;
+	short int		int_l;
+	short int		numout_l;
+	short int		width_l;
+}					t_float;
 
 int					ft_printf(const char *format, ...);
 int					ft_printf_format(t_buf *res, va_list ap,

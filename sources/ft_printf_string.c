@@ -46,8 +46,8 @@ int		ft_printf_string(t_buf *res, const char *string, const t_specs *specs)
 	if (string == NULL)
 		string = "(null)";
 	src_len = ft_strlen(string);
-	if ((specs->flags & FLAG_PRECISION) && (size_t)specs->precision < src_len)
-		dst_len = specs->precision;
+	if ((specs->flags & FLAG_PRECISION) && (size_t)specs->prec < src_len)
+		dst_len = specs->prec;
 	else
 		dst_len = src_len;
 	width_len = ((size_t)specs->width > dst_len ? specs->width - dst_len : 0);
@@ -71,7 +71,7 @@ int		ft_printf_string_utf(t_buf *res, const wchar_t *string,
 	if (string == NULL)
 		string = L"(null)";
 	if (specs->flags & FLAG_PRECISION)
-		dst_len = ft_printf_string_utfcpy(NULL, string, specs->precision);
+		dst_len = ft_printf_string_utfcpy(NULL, string, specs->prec);
 	else
 		dst_len = ft_printf_string_utfcpy(NULL, string, -1);
 	if (dst_len == (size_t)-1)
