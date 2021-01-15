@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:35:04 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/15 23:52:58 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/16 00:06:51 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,12 +178,9 @@ void		ft_printf_float_norm(t_buf *res, t_float *f, t_specs *s)
 	((s->type == 'f' && s->prec) || (s->type == 'g' && f->prec_no0 >= f->int_l))
 				|| s->flags & FLAG_HASH ? ft_printf_bufset(res, '.', 1) : 0;
 	if (f->dot > (int)sizeof(f->str))
-	{
-		if (s->prec < f->dot - (int)sizeof(f->str))
-			ft_printf_bufset(res, '0', s->prec);
-		else
+		(s->prec < f->dot - (int)sizeof(f->str)) ?
+			ft_printf_bufset(res, '0', s->prec) :
 			ft_printf_bufset(res, '0', f->dot - sizeof(f->str));
-	}
 	if (f->dot >= (int)sizeof(f->str) && s->prec < f->dot
 								&& s->prec > f->dot - (int)sizeof(f->str))
 		ft_printf_bufcpy(res, f->str, s->prec - (f->dot - sizeof(f->str)));
@@ -199,28 +196,29 @@ void		ft_printf_float_norm(t_buf *res, t_float *f, t_specs *s)
 
 void		ft_printf_float_exp(t_buf *res, t_float *f, t_specs *s)
 {
-	int		exp;
 	char	exp_str[3];
 	int		i;
 
-	exp = f->src_l - f->dot - 1;
-	ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l, 1);
+	ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l--, 1);
 	ft_printf_bufset(res, '.', s->prec || s->flags & FLAG_HASH);
-	if (s->prec < f->src_l - 1)
-		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l + 1, s->prec);
+	if (s->prec < f->src_l)
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l, s->prec);
 	else
 	{
-		ft_printf_bufcpy(res, f->str + sizeof(f->str) - (f->src_l - 1),
-																f->src_l - 1);
+		ft_printf_bufcpy(res, f->str + sizeof(f->str) - f->src_l, f->src_l);
 		if (s->type != 'g' || s->flags & FLAG_HASH)
-			ft_printf_bufset(res, '0', s->prec - (f->src_l - 1));
+			ft_printf_bufset(res, '0', s->prec - f->src_l);
 	}
 	ft_printf_bufset(res, 'e', 1);
-	ft_printf_bufset(res, (exp >= 0 ? '+' : '-'), 1);
-	(exp < 0) ? exp *= -1 : 0;
+	ft_printf_bufset(res, (f->exp >= 0 ? '+' : '-'), 1);
+	if (f->exp < 0)
+		f->exp *= -1;
 	i = 3;
-	while (i > 1 || exp)
-		(exp_str[--i] = '0' + exp % 10) && (exp /= 10);
+	while (i > 1 || f->exp)
+	{
+		exp_str[--i] = '0' + f->exp % 10;
+		f->exp /= 10;
+	}
 	ft_printf_bufcpy(res, exp_str + i, 3 - i);
 }
 
@@ -252,35 +250,33 @@ int		ft_printf_float_exceptions(t_buf *res, double num, t_specs *specs)
 	return (width_len + str_len);
 }
 
-int		ft_printf_float(t_buf *res, double num, t_specs *specs)
+int		ft_printf_float(t_buf *res, double num, t_specs *s)
 {
 	t_float	f_str;
 	char	real_type;
 
 	if (num != num || num == INFINITY || num == -INFINITY)
-		return (ft_printf_float_exceptions(res, num, specs));
-	f_str.src_l = ft_printf_ftoa(&f_str, num, specs);
+		return (ft_printf_float_exceptions(res, num, s));
+	f_str.src_l = ft_printf_ftoa(&f_str, num, s);
 	f_str.int_l = (f_str.src_l > f_str.dot) ? f_str.src_l - f_str.dot : 0;
-	if ((real_type = specs->type) == 'g')
-		real_type = (specs->prec >= f_str.src_l - f_str.dot - 1 &&
-								f_str.src_l - f_str.dot - 1 >= -4) ? 'f' : 'e';
-	specs->type == 'g' && real_type == 'e' ? specs->prec = f_str.prec_no0 : 0;
-	f_str.numout_l = (real_type == 'e') ?
-		(f_str.sign != 0) + 1 + (specs->prec || specs->flags & FLAG_HASH) +
-				specs->prec + 4 + ((f_str.src_l - f_str.dot - 1) / 100 != 0) :
-		(f_str.sign != 0) + f_str.int_l + (f_str.int_l == 0) +
-				(specs->prec || specs->flags & FLAG_HASH) + specs->prec;
+	f_str.exp = f_str.src_l - f_str.dot - 1;
+	if ((real_type = s->type) == 'g')
+		real_type = (s->prec >= f_str.exp && f_str.exp >= -4) ? 'f' : 'e';
+	s->type == 'g' && real_type == 'e' ? s->prec = f_str.prec_no0 : 0;
+	f_str.numout_l = !!f_str.sign + s->prec + ((real_type == 'e') ?
+		1 + (s->prec || s->flags & FLAG_HASH) + 4 +
+							(((f_str.src_l - f_str.dot - 1) / 100) != 0) :
+		f_str.int_l + !f_str.int_l + (s->prec || s->flags & FLAG_HASH));
 //	if (specs->type == 'g' && real_type == 'f')
 //		f_str.numout_l -= f_str.int_l - (f_str.int_l != 0);
-	f_str.width_l =
-			(specs->width > f_str.numout_l) ? specs->width - f_str.numout_l : 0;
-	if ((specs->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
+	f_str.width_l = (s->width > f_str.numout_l) ? s->width - f_str.numout_l : 0;
+	if ((s->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
 		ft_printf_bufset(res, ' ', f_str.width_l);
 	ft_printf_bufset(res, f_str.sign, f_str.sign != '\0');
-	(specs->flags & FLAG_ZERO) ? ft_printf_bufset(res, '0', f_str.width_l) : 0;
-	(real_type == 'f') ? ft_printf_float_norm(res, &f_str, specs) :
-						ft_printf_float_exp(res, &f_str, specs);
-	(specs->flags & FLAG_MINUS) ? ft_printf_bufset(res, ' ', f_str.width_l) : 0;
+	(s->flags & FLAG_ZERO) ? ft_printf_bufset(res, '0', f_str.width_l) : 0;
+	(real_type == 'f') ? ft_printf_float_norm(res, &f_str, s) :
+						ft_printf_float_exp(res, &f_str, s);
+	(s->flags & FLAG_MINUS) ? ft_printf_bufset(res, ' ', f_str.width_l) : 0;
 	return (f_str.width_l + f_str.numout_l);
 }
 

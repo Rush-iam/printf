@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/15 22:38:19 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/15 23:27:03 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ typedef struct		s_float
 	short int		dot;
 	short int		src_l;
 	short int		int_l;
+	short int		exp;
 	short int		numout_l;
 	short int		width_l;
 	short int		prec_no0;
