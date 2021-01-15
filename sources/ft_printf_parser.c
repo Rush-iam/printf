@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/07 17:58:31 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 18:00:06 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/15 19:09:59 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,11 +58,10 @@ const char	*ft_printf_parse_specs_2(const char *fstr, t_specs *specs)
 		else if (ft_strchr("diuxXp", specs->type))
 			specs->prec = 1;
 	}
+	if (specs->type == 'g' && specs->prec > 0)
+		specs->prec--;
 	if (specs->width < 0)
-	{
-		specs->flags |= FLAG_MINUS;
-		specs->width *= -1;
-	}
+		specs->flags |= FLAG_MINUS && (specs->width *= -1);
 	if (specs->flags & FLAG_MINUS)
 		specs->flags &= ~FLAG_ZERO;
 	if (specs->flags & FLAG_PLUS)

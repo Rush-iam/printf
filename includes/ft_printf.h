@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/14 23:34:54 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/15 22:38:19 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ typedef struct		s_float
 	short int		int_l;
 	short int		numout_l;
 	short int		width_l;
+	short int		prec_no0;
 }					t_float;
 
 int					ft_printf(const char *format, ...);
