@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/05 18:48:46 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/07 19:45:14 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/16 19:21:34 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,20 +19,20 @@ int		ft_printf_char(t_buf *res, va_list ap, const t_specs *specs)
 	int		width_len;
 
 	dst_len = 1;
-	if (specs->type == 'c' && specs->len == LEN_L)
+	if (specs->type == 'c' && specs->len == l)
 		dst_len = ft_wchrto8(char_arr, va_arg(ap, wint_t));
 	else
 		*char_arr = (specs->type == 'c') ? (char)va_arg(ap, int) : specs->type;
 	if (!dst_len)
 		return (-1);
 	width_len = (specs->width > dst_len ? specs->width - dst_len : 0);
-	if (specs->flags & FLAG_MINUS)
+	if (specs->flags & flag_minus)
 		ft_printf_bufcpy(res, char_arr, dst_len);
-	if (specs->flags & FLAG_ZERO)
+	if (specs->flags & flag_zero)
 		ft_printf_bufset(res, '0', width_len);
 	else
 		ft_printf_bufset(res, ' ', width_len);
-	if ((specs->flags & FLAG_MINUS) == 0)
+	if ((specs->flags & flag_minus) == 0)
 		ft_printf_bufcpy(res, char_arr, dst_len);
 	return (width_len + dst_len);
 }
@@ -46,18 +46,18 @@ int		ft_printf_string(t_buf *res, const char *string, const t_specs *specs)
 	if (string == NULL)
 		string = "(null)";
 	src_len = ft_strlen(string);
-	if ((specs->flags & FLAG_PRECISION) && (size_t)specs->prec < src_len)
+	if ((specs->flags & flag_precision) && (size_t)specs->prec < src_len)
 		dst_len = specs->prec;
 	else
 		dst_len = src_len;
 	width_len = ((size_t)specs->width > dst_len ? specs->width - dst_len : 0);
-	if (specs->flags & FLAG_MINUS)
+	if (specs->flags & flag_minus)
 		ft_printf_bufcpy(res, string, dst_len);
-	if (specs->flags & FLAG_ZERO)
+	if (specs->flags & flag_zero)
 		ft_printf_bufset(res, '0', width_len);
 	else
 		ft_printf_bufset(res, ' ', width_len);
-	if ((specs->flags & FLAG_MINUS) == 0)
+	if ((specs->flags & flag_minus) == 0)
 		ft_printf_bufcpy(res, string, dst_len);
 	return (width_len + dst_len);
 }
@@ -70,20 +70,20 @@ int		ft_printf_string_utf(t_buf *res, const wchar_t *string,
 
 	if (string == NULL)
 		string = L"(null)";
-	if (specs->flags & FLAG_PRECISION)
+	if (specs->flags & flag_precision)
 		dst_len = ft_printf_string_utfcpy(NULL, string, specs->prec);
 	else
 		dst_len = ft_printf_string_utfcpy(NULL, string, -1);
 	if (dst_len == (size_t)-1)
 		return (-1);
 	width_len = ((size_t)specs->width > dst_len ? specs->width - dst_len : 0);
-	if (specs->flags & FLAG_MINUS)
+	if (specs->flags & flag_minus)
 		ft_printf_string_utfcpy(res, string, dst_len);
-	if (specs->flags & FLAG_ZERO)
+	if (specs->flags & flag_zero)
 		ft_printf_bufset(res, '0', width_len);
 	else
 		ft_printf_bufset(res, ' ', width_len);
-	if ((specs->flags & FLAG_MINUS) == 0)
+	if ((specs->flags & flag_minus) == 0)
 		ft_printf_string_utfcpy(res, string, dst_len);
 	return (width_len + dst_len);
 }

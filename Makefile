@@ -6,13 +6,14 @@
 #    By: ngragas <ngragas@student.21-school.ru>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/04 20:29:14 by ngragas           #+#    #+#              #
-#    Updated: 2020/12/28 19:28:49 by ngragas          ###   ########.fr        #
+#    Updated: 2021/01/16 22:00:08 by ngragas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libftprintf.a
 CFLAGS = -Wall -Wextra -Werror -MMD -O2
-SRC = ft_printf.c
+SRC =	ft_printf.c			ft_printf_parser.c	ft_printf_string.c			\
+		ft_printf_int.c		ft_printf_float.c	ft_printf_float_converter.c
 OBJ = $(addprefix $(OBJ_DIR), $(SRC:.c=.o))
 DEP = $(OBJ:.o=.d)
 LIB = $(LIB_DIR)libft.a
@@ -24,9 +25,9 @@ LIB_DIR = libft/
 all: $(NAME)
 $(LIB): FORCE
 	$(MAKE) -C $(LIB_DIR)
-$(NAME): $(OBJ) $(LIB)
+$(NAME): $(LIB) $(OBJ)
 	cp $(LIB) $(NAME)
-	$(AR) rcs $(NAME) $<
+	$(AR) rcs $(NAME) $(OBJ)
 $(OBJ): | $(OBJ_DIR)
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)

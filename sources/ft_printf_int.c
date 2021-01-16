@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/06 20:02:42 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/08 17:36:04 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/16 22:06:57 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,22 +20,22 @@ long long	ft_printf_int_get(va_list ap, const t_specs *specs)
 	{
 		if (specs->len == 0)
 			return (va_arg(ap, int));
-		else if (specs->len == LEN_LL)
+		else if (specs->len == ll)
 			return (va_arg(ap, long long int));
-		else if (specs->len == LEN_L)
+		else if (specs->len == l)
 			return (va_arg(ap, long int));
-		else if (specs->len == LEN_HH)
+		else if (specs->len == hh)
 			return ((char)va_arg(ap, int));
-		else if (specs->len == LEN_H)
+		else if (specs->len == h)
 			return ((short int)va_arg(ap, int));
 	}
-	if (specs->len == LEN_LL)
+	if (specs->len == ll)
 		return (va_arg(ap, unsigned long long int));
-	else if (specs->len == LEN_L)
+	else if (specs->len == l)
 		return (va_arg(ap, unsigned long int));
-	else if (specs->len == LEN_HH)
+	else if (specs->len == hh)
 		return ((unsigned char)va_arg(ap, unsigned int));
-	else if (specs->len == LEN_H)
+	else if (specs->len == h)
 		return ((unsigned short int)va_arg(ap, unsigned int));
 	else
 		return (va_arg(ap, unsigned int));
@@ -59,14 +59,14 @@ int			ft_printf_int(t_buf *res, long long num, int base,
 	width_l = 0;
 	if (specs->width > (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l)
 		width_l = specs->width - !!num_str[0] - !!num_str[1] - prec_l - src_l;
-	if ((specs->flags & (FLAG_MINUS | FLAG_ZERO)) == 0)
+	if ((specs->flags & (flag_minus | flag_zero)) == 0)
 		ft_printf_bufset(res, ' ', width_l);
 	ft_printf_bufcpy(res, num_str, (num_str[0] != 0) + (num_str[1] != 0));
-	if (specs->flags & FLAG_ZERO)
+	if (specs->flags & flag_zero)
 		ft_printf_bufset(res, '0', width_l);
 	ft_printf_bufset(res, '0', prec_l);
 	ft_printf_bufcpy(res, num_str + (23 - src_l), src_l);
-	if (specs->flags & FLAG_MINUS)
+	if (specs->flags & flag_minus)
 		ft_printf_bufset(res, ' ', width_l);
 	return (width_l + (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l);
 }
@@ -92,9 +92,9 @@ int			ft_printf_itoa_signed(char *dst, long long num,
 	}
 	if (sign == 1)
 	{
-		if (specs->flags & FLAG_PLUS)
+		if (specs->flags & flag_plus)
 			dst[0] = '+';
-		else if (specs->flags & FLAG_SPACE)
+		else if (specs->flags & flag_space)
 			dst[0] = ' ';
 		else
 			dst[0] = '\0';
@@ -113,17 +113,14 @@ int			ft_printf_itoa_unsigned(char *dst, unsigned long long num, int base,
 	int			prefix_0x;
 	int			count;
 
-	prefix_0x = specs->type == 'p' ||
-				(base == 16 && (specs->flags & FLAG_HASH) && num);
+	prefix_0x = (specs->type == 'p') ||
+				(base == 16 && (specs->flags & flag_hash) && num);
 	count = 0;
 	while (num)
 	{
-		if (specs->type == 'X')
-			dst[22 - count] = digits_upper[num % base];
-		else
-			dst[22 - count] = digits[num % base];
+		dst[22 - count++] = (specs->type == 'X') ?
+								digits_upper[num % base] : digits[num % base];
 		num /= base;
-		count++;
 	}
 	if (prefix_0x)
 	{
@@ -131,6 +128,9 @@ int			ft_printf_itoa_unsigned(char *dst, unsigned long long num, int base,
 		dst[1] = (specs->type == 'X') ? 'X' : 'x';
 	}
 	else
+	{
 		dst[0] = '\0';
+		dst[1] = '\0';
+	}
 	return (count);
 }
