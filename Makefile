@@ -6,7 +6,7 @@
 #    By: ngragas <ngragas@student.21-school.ru>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/04 20:29:14 by ngragas           #+#    #+#              #
-#    Updated: 2021/01/16 23:37:35 by ngragas          ###   ########.fr        #
+#    Updated: 2021/01/16 23:51:18 by ngragas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,8 +31,7 @@ $(LIB): FORCE
 $(NAME): $(LIB) $(OBJ)
 	cp $(LIB) $(NAME)
 	$(AR) rcs $(NAME) $(OBJ)
-bonus: $(LIB) $(OBJ_BONUS)
-	cp $(LIB) $(NAME)
+bonus: $(NAME) $(OBJ_BONUS)
 	$(AR) rcs $(NAME) $(OBJ_BONUS)
 $(OBJ): | $(OBJ_DIR)
 $(OBJ_BONUS): | $(OBJ_DIR)
