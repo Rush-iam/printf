@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/06 20:02:42 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/16 22:06:57 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/18 22:29:08 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,9 @@ int			ft_printf_int(t_buf *res, long long num, int base,
 		src_l = ft_printf_itoa_signed(num_str, num, specs);
 	else
 		src_l = ft_printf_itoa_unsigned(num_str, num, base, specs);
-	prec_l = 0;
-	if (specs->prec > src_l)
-		prec_l = specs->prec - src_l;
+	prec_l = (specs->prec > src_l) ? specs->prec - src_l : 0;
+	if (specs->type == 'o' && prec_l != 0 && specs->flags & flag_hash)
+		num_str[0] = '\0';
 	width_l = 0;
 	if (specs->width > (num_str[0] != 0) + (num_str[1] != 0) + prec_l + src_l)
 		width_l = specs->width - !!num_str[0] - !!num_str[1] - prec_l - src_l;
@@ -116,21 +116,19 @@ int			ft_printf_itoa_unsigned(char *dst, unsigned long long num, int base,
 	prefix_0x = (specs->type == 'p') ||
 				(base == 16 && (specs->flags & flag_hash) && num);
 	count = 0;
+	if (prefix_0x || (base == 8 && specs->flags & flag_hash))
+		dst[0] = '0';
+	else
+		dst[0] = '\0';
+	if (prefix_0x)
+		dst[1] = (specs->type == 'X') ? 'X' : 'x';
+	else
+		dst[1] = '\0';
 	while (num)
 	{
 		dst[22 - count++] = (specs->type == 'X') ?
-								digits_upper[num % base] : digits[num % base];
+							digits_upper[num % base] : digits[num % base];
 		num /= base;
-	}
-	if (prefix_0x)
-	{
-		dst[0] = '0';
-		dst[1] = (specs->type == 'X') ? 'X' : 'x';
-	}
-	else
-	{
-		dst[0] = '\0';
-		dst[1] = '\0';
 	}
 	return (count);
 }

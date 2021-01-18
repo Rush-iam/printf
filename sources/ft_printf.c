@@ -56,6 +56,8 @@ int		ft_printf_format(t_buf *res, va_list ap, const char **format)
 		count = ft_printf_string_utf(res, va_arg(ap, wchar_t *), &specs);
 	else if (specs.type == 'd' || specs.type == 'i' || specs.type == 'u')
 		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 10, &specs);
+	else if (specs.type == 'o')
+		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 8, &specs);
 	else if (specs.type == 'x' || specs.type == 'X' || specs.type == 'p')
 		count = ft_printf_int(res, ft_printf_int_get(ap, &specs), 16, &specs);
 	else if (specs.type == 'f' || specs.type == 'e' || specs.type == 'g')

@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/07 17:58:31 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/16 19:32:57 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/18 21:37:26 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,14 +48,14 @@ const char	*ft_printf_parse_refine(const char *frmt, t_specs *specs)
 		return (frmt);
 	if (specs->type == 'p')
 		specs->len = l;
-	if (ft_strchr("diuxX", specs->type) && (specs->flags & flag_precision))
+	if (ft_strchr("diuxXpo", specs->type) && (specs->flags & flag_precision))
 		specs->flags &= ~flag_zero;
 	if (specs->prec < 0 || (specs->flags & flag_precision) == 0)
 	{
 		specs->flags &= ~flag_precision;
 		if (ft_strchr("feg", specs->type))
 			specs->prec = 6;
-		else if (ft_strchr("diuxXp", specs->type))
+		else if (ft_strchr("diuxXpo", specs->type))
 			specs->prec = 1;
 	}
 	if (specs->type == 'g' && specs->prec > 0)

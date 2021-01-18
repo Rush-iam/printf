@@ -6,7 +6,7 @@
 /*   By: ngragas <ngragas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/03 21:34:53 by ngragas           #+#    #+#             */
-/*   Updated: 2021/01/16 19:27:19 by ngragas          ###   ########.fr       */
+/*   Updated: 2021/01/18 21:45:16 by ngragas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ typedef struct	s_specs
 typedef struct	s_float
 {
 	char		sign;
-	char		str[751];
+	char		str[767];
 	short int	dot;
 	short int	exp;
 	short int	src_l;
