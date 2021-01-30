@@ -6,12 +6,12 @@
 #    By: ngragas <ngragas@student.21-school.ru>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/04 20:29:14 by ngragas           #+#    #+#              #
-#    Updated: 2021/01/18 12:04:56 by ngragas          ###   ########.fr        #
+#    Updated: 2021/01/26 19:59:30 by ngragas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libftprintf.a
-CFLAGS = -Wall -Wextra -Werror -MMD# -O2
+CFLAGS = -Wall -Wextra -Werror -MMD -O2
 SRC =	ft_printf.c			ft_printf_parser.c	ft_printf_string.c			\
 		ft_printf_int.c		ft_printf_float.c	ft_printf_float_converter.c
 OBJ = $(addprefix $(OBJ_DIR), $(SRC:.c=.o))
@@ -25,7 +25,7 @@ LIB_DIR = libft/
 all: $(NAME)
 bonus: all
 $(LIB): FORCE
-	$(MAKE) -C $(LIB_DIR)
+	$(MAKE) -C $(LIB_DIR) -j4
 $(NAME): $(LIB) $(OBJ)
 	cp $(LIB) $(NAME)
 	$(AR) rcs $(NAME) $(OBJ)
@@ -38,7 +38,7 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.c
 
 clean:
 	$(RM) $(OBJ)
-	$(RM) $(DEP):
+	$(RM) $(DEP)
 	$(RM)r $(OBJ_DIR)
 	$(MAKE) -C $(LIB_DIR) $@
 fclean: clean

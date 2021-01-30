@@ -6,12 +6,12 @@
 #    By: ngragas <ngragas@student.21-school.ru>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/04 20:29:14 by ngragas           #+#    #+#              #
-#    Updated: 2020/12/28 19:37:22 by ngragas          ###   ########.fr        #
+#    Updated: 2021/01/26 18:20:34 by ngragas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libft.a
-CFLAGS = -Wall -Wextra -Werror -MMD# -O2
+CFLAGS = -Wall -Wextra -Werror -MMD -O2
 HEADER = libft.h
 SRCS =		ft_isalpha.c	ft_isdigit.c	ft_isalnum.c	ft_isprint.c	\
 			ft_isascii.c	ft_toupper.c	ft_tolower.c	ft_strmapi.c	\
